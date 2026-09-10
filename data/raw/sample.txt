@@ -1,1 +1,53 @@
-...
+# StudySense - Basic Data Collection and Cleaning
+
+# Ask for information about the study material
+subject = input("What is the subject? ")
+topic = input("What is the topic? ")
+
+print("\nEnter your study notes.")
+print("Type DONE on a new line when you are finished.\n")
+
+# Collect multiple lines of notes
+notes = []
+
+while True:
+    line = input()
+
+    if line == "DONE":
+        break
+
+    notes.append(line)
+
+# Combine all of the lines into one piece of text
+raw_text = "\n".join(notes)
+
+# Save the original data
+with open("data/raw/study_notes.txt", "w") as file:
+    file.write("Subject: " + subject + "\n")
+    file.write("Topic: " + topic + "\n\n")
+    file.write(raw_text)
+
+# Clean the data
+cleaned_lines = []
+
+for line in notes:
+    line = line.strip()
+
+    if line != "":
+        cleaned_lines.append(line)
+
+# Put the cleaned lines back together
+cleaned_text = "\n".join(cleaned_lines)
+
+# Save the cleaned data
+with open("data/cleaned/study_notes_cleaned.txt", "w") as file:
+    file.write("Subject: " + subject + "\n")
+    file.write("Topic: " + topic + "\n\n")
+    file.write(cleaned_text)
+
+# Display information about the data
+print("\nStudy material saved and cleaned!")
+print("Subject:", subject)
+print("Topic:", topic)
+print("Number of lines:", len(cleaned_lines))
+print("Number of characters:", len(cleaned_text))
