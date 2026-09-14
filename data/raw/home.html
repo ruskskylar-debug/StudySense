@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>StudySense</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<div class="app home-app">
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            <h1>StudySense</h1>
+            <p>Your personal study space</p>
+        </div>
+
+        <nav>
+            <a href="/" class="active">Home</a>
+            <a href="/ask-ai">Ask AI</a>
+            <a href="/flashcards">Flashcards</a>
+            <a href="/progress">Progress</a>
+        </nav>
+
+    </aside>
+
+
+    <main class="main-content home-main-content">
+
+        <div class="page-header">
+            <h2>Welcome to StudySense</h2>
+            <p>Upload your study material or add notes to get started.</p>
+        </div>
+
+
+        <section class="upload-card">
+
+            <div class="section-header">
+                <h2>Add Study Material</h2>
+                <p>Upload a file or paste your notes below.</p>
+            </div>
+
+
+            <form action="/upload" method="POST" enctype="multipart/form-data">
+
+                <div class="form-row">
+
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+
+                        <input
+                            type="text"
+                            id="subject"
+                            name="subject"
+                            placeholder="Example: Biology"
+                            required
+                        >
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="topic">
+                            Topic <span>(optional)</span>
+                        </label>
+
+                        <input
+                            type="text"
+                            id="topic"
+                            name="topic"
+                            placeholder="Example: Cells, Genetics, Photosynthesis"
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="file">Upload File</label>
+
+                    <input
+                        type="file"
+                        id="file"
+                        name="file"
+                        accept=".txt,.pdf,.docx"
+                    >
+
+                    <p class="input-help">
+                        Supported file types: TXT, PDF, and DOCX
+                    </p>
+
+                </div>
+
+
+                <div class="upload-divider">
+                    <span>or</span>
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="text">Paste or Type Notes</label>
+
+                    <textarea
+                        id="text"
+                        name="text"
+                        rows="8"
+                        placeholder="Paste your study material here..."
+                    ></textarea>
+
+                </div>
+
+
+                <button type="submit" class="primary-button">
+                    Add Material
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <section class="materials-section">
+
+            <div class="section-header">
+                <h2>My Materials</h2>
+                <p>Your uploaded study materials will appear here.</p>
+            </div>
+
+
+            {% if subjects %}
+
+                <div class="subject-grid">
+
+                    {% for subject, subjectData in subjects.items() %}
+
+                        <div class="subject-card">
+
+                            <div class="subject-card-header">
+                                <h3>{{ subject }}</h3>
+                            </div>
+
+
+                            <p>
+                                {{ subjectData["materials"]|length }}
+                                material(s)
+                            </p>
+
+
+                            <div class="subject-actions">
+
+                                <a
+                                    href="/ask-ai?subject={{ subject }}"
+                                    class="secondary-button"
+                                >
+                                    Ask AI
+                                </a>
+
+
+                                <a
+                                    href="/flashcards?subject={{ subject }}"
+                                    class="secondary-button"
+                                >
+                                    Flashcards
+                                </a>
+
+
+                                <a
+                                    href="/progress?subject={{ subject }}"
+                                    class="secondary-button"
+                                >
+                                    Progress
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+
+                    <h3>No study material yet</h3>
+
+                    <p>
+                        Upload a file or paste your notes above to get started.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <section class="quick-actions">
+
+            <div class="section-header">
+                <h2>Quick Actions</h2>
+            </div>
+
+
+            <div class="quick-action-grid">
+
+                <a href="/ask-ai" class="quick-action-card">
+
+                    <h3>Ask AI</h3>
+
+                    <p>
+                        Ask questions about your study material.
+                    </p>
+
+                </a>
+
+
+                <a href="/flashcards" class="quick-action-card">
+
+                    <h3>Make Flashcards</h3>
+
+                    <p>
+                        Create flashcards from your materials.
+                    </p>
+
+                </a>
+
+
+                <a href="/progress" class="quick-action-card">
+
+                    <h3>View Progress</h3>
+
+                    <p>
+                        See what you know and what needs more practice.
+                    </p>
+
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>
