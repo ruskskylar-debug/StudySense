@@ -1,5 +1,0 @@
-Flask
-PyPDF2
-python-docx
-transformers
-torch
