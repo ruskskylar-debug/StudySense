@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Progress - StudySense</title>
+
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+>
+
+
+</head>
+
+<body>
+
+<div class="app">
+
+
+<aside class="sidebar">
+
+    <div class="logo">
+
+        <h1>StudySense</h1>
+
+        <p>Your personal study space</p>
+
+    </div>
+
+    <nav>
+
+        <a href="/">
+            Home
+        </a>
+
+        <a href="/ask-ai">
+            Ask AI
+        </a>
+
+        <a href="/flashcards">
+            Flashcards
+        </a>
+
+        <a href="/progress" class="active">
+            Progress
+        </a>
+
+    </nav>
+
+</aside>
+
+
+<main class="main-content">
+
+    <div class="page-header">
+
+        <h2>Your Progress</h2>
+
+        <p>
+            See what you're doing well and what may need
+            more practice.
+        </p>
+
+    </div>
+
+
+    <section class="upload-card">
+
+        <div class="section-header">
+
+            <h2>Choose a Subject</h2>
+
+            <p>
+                Select a subject to view your study progress.
+            </p>
+
+        </div>
+
+        <form
+            action="/progress"
+            method="GET"
+        >
+
+            <select
+                name="subject"
+                onchange="this.form.submit()"
+            >
+
+                <option value="">
+                    Choose a subject
+                </option>
+
+                {% for subject in subjects %}
+
+                <option
+                    value="{{ subject }}"
+                    {% if selectedSubject == subject %}
+                    selected
+                    {% endif %}
+                >
+                    {{ subject }}
+                </option>
+
+                {% endfor %}
+
+            </select>
+
+        </form>
+
+    </section>
+
+
+    {% if selectedSubject %}
+
+    <section class="selected-subject">
+
+        <strong>
+            Viewing Progress For:
+        </strong>
+
+        {{ selectedSubject }}
+
+    </section>
+
+
+    <section class="progress-section">
+
+        <h2>
+            Overall Progress
+        </h2>
+
+        <div class="progress-bar">
+
+            <div
+                class="progress-fill"
+                style="width: {{ progressPercent }}%;"
+            >
+            </div>
+
+        </div>
+
+        <p>
+
+            Your current study progress is
+
+            <strong>
+                {{ progressPercent }}%
+            </strong>
+
+            based on your flashcard results.
+
+        </p>
+
+
+        {% if flashcardResults %}
+
+        <div class="progress-result-summary">
+
+            <div class="progress-result-card">
+
+                <strong>
+                    {{ flashcardResults|selectattr("result", "equalto", "gotIt")|list|length }}
+                </strong>
+
+                <span>
+                    Got it
+                </span>
+
+            </div>
+
+
+            <div class="progress-result-card">
+
+                <strong>
+                    {{ flashcardResults|selectattr("result", "equalto", "almost")|list|length }}
+                </strong>
+
+                <span>
+                    Almost
+                </span>
+
+            </div>
+
+
+            <div class="progress-result-card">
+
+                <strong>
+                    {{ flashcardResults|selectattr("result", "equalto", "needHelp")|list|length }}
+                </strong>
+
+                <span>
+                    Need help
+                </span>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <section class="weak-section">
+
+        <h2>
+            Weak Points
+        </h2>
+
+        <p>
+
+            These are areas that may need more practice
+            in {{ selectedSubject }}.
+
+        </p>
+
+
+        {% if weakPoints %}
+
+            {% for point in weakPoints %}
+
+            <div class="weak-point">
+
+                <span>
+                    {{ point }}
+                </span>
+
+
+                <form
+                    action="/remove-weak-point"
+                    method="POST"
+                >
+
+                    <input
+                        type="hidden"
+                        name="subject"
+                        value="{{ selectedSubject }}"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="weakPoint"
+                        value="{{ point }}"
+                    >
+
+                    <button type="submit">
+                        Remove
+                    </button>
+
+                </form>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p class="empty">
+                No weak points have been identified yet.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+    <section class="weak-study">
+
+        <h2>
+            Want to work on your weak points?
+        </h2>
+
+        <p>
+            You decide what you want to study.
+            Weak points are only recommendations.
+        </p>
+
+        <a
+            href="/flashcards?subject={{ selectedSubject }}"
+            class="button"
+        >
+            Make Flashcards
+        </a>
+
+    </section>
+
+
+    <section>
+
+        <h2>
+            {{ selectedSubject }} Study Materials
+        </h2>
+
+
+        {% if materials %}
+
+            {% for material in materials %}
+
+            <div class="material-card">
+
+                <div>
+
+                    <h3>
+                        {{ material.topic }}
+                    </h3>
+
+                    <p>
+                        {{ material.fileName }}
+                    </p>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <p class="empty">
+                No materials have been added for this
+                subject yet.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+    {% else %}
+
+    <section class="welcome">
+
+        <h2>
+            Select a subject to view progress
+        </h2>
+
+        <p>
+            Each subject has its own materials, weak
+            points, and study progress.
+        </p>
+
+    </section>
+
+    {% endif %}
+
+</main>
+```
+
+</div>
+
+</body>
+
+</html>
