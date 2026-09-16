@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Flashcards - StudySense</title>
+
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+>
+
+
+</head>
+
+<body>
+
+<div class="app">
+
+
+<aside class="sidebar">
+
+    <div class="logo">
+
+        <h1>StudySense</h1>
+
+        <p>Your personal study space</p>
+
+    </div>
+
+    <nav>
+
+        <a href="/">
+            Home
+        </a>
+
+        <a href="/ask-ai">
+            Ask AI
+        </a>
+
+        <a href="/flashcards" class="active">
+            Flashcards
+        </a>
+
+        <a href="/progress">
+            Progress
+        </a>
+
+    </nav>
+
+</aside>
+
+
+<main class="main-content">
+
+    <div class="page-header">
+
+        <h2>Flashcards</h2>
+
+        <p>
+            Choose what you want to review and let StudySense
+            create a set of flashcards for you.
+        </p>
+
+    </div>
+
+
+    {% if not cards %}
+
+    <section class="upload-card">
+
+        <div class="section-header">
+
+            <h2>Create Flashcards</h2>
+
+            <p>
+                Choose what you want to study.
+            </p>
+
+        </div>
+
+
+        <form
+            action="/flashcards"
+            method="POST"
+        >
+
+            <div class="form-group">
+
+                <label for="subject">
+                    Subject
+                </label>
+
+                <select
+                    id="subject"
+                    name="subject"
+                    required
+                >
+
+                    <option value="">
+                        Choose a subject
+                    </option>
+
+                    {% for subject in subjects %}
+
+                    <option
+                        value="{{ subject }}"
+                        {% if selectedSubject == subject %}
+                        selected
+                        {% endif %}
+                    >
+                        {{ subject }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+
+            <div
+                class="option"
+                onclick="document.getElementById('all').checked = true"
+            >
+
+                <input
+                    type="radio"
+                    name="choice"
+                    value="all"
+                    id="all"
+                    checked
+                >
+
+                <label for="all">
+
+                    <strong>
+                        All Material
+                    </strong>
+
+                    <span>
+                        Review everything from this subject.
+                    </span>
+
+                </label>
+
+            </div>
+
+
+            <div
+                class="option"
+                onclick="document.getElementById('topic').checked = true"
+            >
+
+                <input
+                    type="radio"
+                    name="choice"
+                    value="topic"
+                    id="topic"
+                >
+
+                <label for="topic">
+
+                    <strong>
+                        Specific Topic
+                    </strong>
+
+                    <span>
+                        Focus your flashcards on one topic.
+                    </span>
+
+                </label>
+
+            </div>
+
+
+            <div class="topic-input">
+
+                <input
+                    type="text"
+                    name="topic"
+                    placeholder="Enter topic"
+                >
+
+            </div>
+
+
+            <div
+                class="option"
+                onclick="document.getElementById('weak').checked = true"
+            >
+
+                <input
+                    type="radio"
+                    name="choice"
+                    value="weak"
+                    id="weak"
+                >
+
+                <label for="weak">
+
+                    <strong>
+                        Weak Points
+                    </strong>
+
+                    <span>
+                        Focus on areas that need more practice.
+                    </span>
+
+                </label>
+
+            </div>
+
+
+            <div
+                class="option"
+                onclick="document.getElementById('random').checked = true"
+            >
+
+                <input
+                    type="radio"
+                    name="choice"
+                    value="random"
+                    id="random"
+                >
+
+                <label for="random">
+
+                    <strong>
+                        Random Review
+                    </strong>
+
+                    <span>
+                        Let StudySense choose what to review.
+                    </span>
+
+                </label>
+
+            </div>
+
+
+            <div class="number-box">
+
+                <label for="number">
+                    Number of flashcards
+                </label>
+
+                <select id="number" name="number">
+
+                    <option value="5">
+                        5
+                    </option>
+
+                    <option value="10" selected>
+                        10
+                    </option>
+
+                    <option value="15">
+                        15
+                    </option>
+
+                    <option value="20">
+                        20
+                    </option>
+
+                    <option value="25">
+                        25
+                    </option>
+
+                    <option value="30">
+                        30
+                    </option>
+
+                    <option value="35">
+                        35
+                    </option>
+
+                    <option value="40">
+                        40
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="primary-button"
+            >
+                Create Flashcards
+            </button>
+
+        </form>
+
+    </section>
+
+    {% endif %}
+
+
+    {% if selectedSubject %}
+
+    <div class="selected-subject">
+
+        <strong>
+            Studying:
+        </strong>
+
+        {{ selectedSubject }}
+
+    </div>
+
+    {% endif %}
+
+
+    {% if error %}
+
+    <div class="error-box">
+
+        {{ error }}
+
+    </div>
+
+    {% endif %}
+
+
+    {% if cards %}
+
+    <div class="flashcard-header">
+
+        <div>
+
+            <h2>
+                {{ selectedSubject }} Review
+            </h2>
+
+            <p>
+                Click a card to reveal the answer.
+            </p>
+
+        </div>
+
+
+        <a
+            href="/flashcards?subject={{ selectedSubject }}"
+            class="button secondary-button"
+        >
+            New Set
+        </a>
+
+    </div>
+
+
+    <div class="flashcard-grid">
+
+        {% for card in cards %}
+
+        <div class="study-card-container">
+
+            <div
+                class="study-card"
+                onclick="flipCard(this)"
+            >
+
+                <div class="card-front">
+
+                    <span class="card-label">
+                        QUESTION
+                    </span>
+
+                    <h3>
+                        {{ card.question }}
+                    </h3>
+
+                    <p class="flip-hint">
+                        Click to reveal answer
+                    </p>
+
+                </div>
+
+
+                <div class="card-back">
+
+                    <span class="card-label">
+                        ANSWER
+                    </span>
+
+                    <p>
+                        {{ card.answer }}
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="card-result">
+
+                <form
+                    action="/flashcard-result"
+                    method="POST"
+                >
+
+                    <input
+                        type="hidden"
+                        name="subject"
+                        value="{{ selectedSubject }}"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="question"
+                        value="{{ card.question }}"
+                    >
+
+                    <button
+                        type="submit"
+                        name="result"
+                        value="gotIt"
+                        class="result-button got-it"
+                    >
+                        Got it
+                    </button>
+
+                    <button
+                        type="submit"
+                        name="result"
+                        value="almost"
+                        class="result-button almost"
+                    >
+                        Almost
+                    </button>
+
+                    <button
+                        type="submit"
+                        name="result"
+                        value="needHelp"
+                        class="result-button need-help"
+                    >
+                        Need help
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <script>
+
+        function flipCard(card) {
+            card.classList.toggle("flipped");
+        }
+
+    </script>
+
+    {% endif %}
+
+</main>
+```
+
+</div>
+
+</body>
+
+</html>
