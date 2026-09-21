@@ -264,21 +264,6 @@
                         20
                     </option>
 
-                    <option value="25">
-                        25
-                    </option>
-
-                    <option value="30">
-                        30
-                    </option>
-
-                    <option value="35">
-                        35
-                    </option>
-
-                    <option value="40">
-                        40
-                    </option>
 
                 </select>
 
@@ -463,7 +448,7 @@
     {% endif %}
 
 </main>
-```
+
 
 </div>
 
