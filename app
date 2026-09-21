@@ -23,14 +23,20 @@ try:
     from transformers import pipeline
 
     llm = pipeline(
-        "text-generation",
-        model="Qwen/Qwen2.5-1.5B-Instruct",
-        device_map="auto"
-    )
+    "text-generation",
+    model="Qwen/Qwen2.5-0.5B-Instruct",
+    device_map="auto"
+)
 
     print("StudySense AI is ready.")
+    print("LLM =", llm)
 
-    
+    test = llm(
+    "What is DNA?",
+    max_new_tokens=50
+)
+
+    print(test)
 
 except Exception as error:
 
@@ -414,59 +420,7 @@ def findRelevantMaterial(text, question, maxCharacters=3500):
     return relevantText[:maxCharacters]
 
 
-def generateAnswer(text, question):
 
-    if text.strip() == "":
-        return "There is no study material for this subject yet."
-
-    if llm is None:
-        return "StudySense AI could not be loaded. Check the terminal for the AI error."
-
-    try:
-
-        relevantText = findRelevantMaterial(
-            text,
-            question,
-            1500
-        )
-
-        prompt = f"""
-You are StudySense.
-
-Answer the student's question using ONLY the study material below.
-
-Rules:
-- Use only information from the study material.
-- Do not use outside knowledge.
-- If the answer is not found in the study material, say:
-  "I cannot find that information in the study material."
-- Keep the answer clear and concise.
-
-Study Material:
-{relevantText}
-
-Question:
-{question}
-
-Answer:
-"""
-
-        result = llm(
-            prompt,
-            max_new_tokens=150,
-            do_sample=False
-        )
-
-        answer = result[0]["generated_text"]
-
-        if "Answer:" in answer:
-            answer = answer.split("Answer:")[-1].strip()
-
-        return answer
-
-    except Exception as error:
-
-        return "StudySense could not generate an answer.\n\n" + str(error)
 
 # --------------------------------------------------
 # FLASHCARDS
@@ -519,6 +473,7 @@ def flashcards():
     methods=["POST"]
 )
 def createFlashcards():
+    print("CREATE FLASHCARDS ROUTE HIT")
 
     choice = request.form.get(
         "choice"
@@ -647,132 +602,172 @@ def createFlashcards():
 
 def generateFlashcards(text, number):
 
-    if llm is None:
-        return [{
-            "question": "Flashcards could not be generated.",
-            "answer": "StudySense AI could not be loaded. Check the terminal."
-        }]
+    cards = []
 
+    sentences = re.split(r'[.!?]', text)
+
+    for sentence in sentences:
+
+        sentence = sentence.strip()
+
+        if len(sentence) < 30:
+            continue
+
+        lowerSentence = sentence.lower()
+
+        question = None
+        answer = sentence
+
+        if " is " in lowerSentence:
+
+            term = sentence.split(" is ")[0].strip()
+
+            question = f"What is {term}?"
+
+        elif " are " in lowerSentence:
+
+            parts = sentence.split(" are ", 1)
+
+            if parts[0].strip().lower() == "there":
+                question = f"What does the study material identify in this statement?"
+            else:
+                question = f"What are {parts[0].strip()}?"
+
+        elif " helps " in lowerSentence:
+
+            parts = sentence.split(" helps ", 1)
+
+            question = f"How does {parts[0].strip()} help?"
+
+        elif " allows " in lowerSentence:
+
+            parts = sentence.split(" allows ", 1)
+
+            question = f"What does {parts[0].strip()} allow?"
+
+        elif " used for " in lowerSentence:
+
+            parts = sentence.split(" used for ", 1)
+
+            question = f"What is {parts[0].strip()} used for?"
+
+        elif " important " in lowerSentence:
+
+            question = f"Why is this concept important?"
+
+        elif " produces " in lowerSentence:
+
+            parts = sentence.split(" produces ")
+
+            question = f"What does {parts[0].strip()} produce?"
+
+        elif " contains " in lowerSentence:
+
+            parts = sentence.split(" contains ")
+
+            question = f"What does {parts[0].strip()} contain?"
+
+        elif " creates " in lowerSentence:
+
+            parts = sentence.split(" creates ")
+
+            question = f"What does {parts[0].strip()} create?"
+
+        elif " includes " in lowerSentence:
+
+            parts = sentence.split(" includes ")
+
+            question = f"What does {parts[0].strip()} include?"
+        elif " means " in lowerSentence:
+
+            parts = sentence.split(" means ", 1)
+
+            question = f"What does {parts[0].strip()} mean?"
+
+        elif " refers to " in lowerSentence:
+
+            parts = sentence.split(" refers to ", 1)
+
+            question = f"What does {parts[0].strip()} refer to?"
+
+        elif " called " in lowerSentence:
+
+            parts = sentence.split(" called ", 1)
+
+            question = f"What is called {parts[1].strip()}?"
+
+        elif " consists of " in lowerSentence:
+
+            parts = sentence.split(" consists of ", 1)
+
+            question = f"What does {parts[0].strip()} consist of?"
+
+        if question:
+
+            cards.append({
+                "question": question,
+                "answer": answer
+            })
+
+        if len(cards) >= number:
+            break
+
+    if not cards:
+
+        cards.append({
+            "question": "No flashcards could be created.",
+            "answer": "There was not enough study material."
+        })
+
+    return cards
+
+
+def generateAnswer(question, material):
     try:
-
-        relevantText = findRelevantMaterial(
-            text,
-            "important concepts definitions facts",
-            1500
-        )
-
         prompt = f"""
-You are StudySense.
+You are the StudySense AI Assistant.
 
-Create exactly {number} flashcards using ONLY the study material below.
+Use the study material provided below to answer the student's question.
 
-Rules:
-- Use information only from the study material.
-- Do not use outside knowledge.
-- Each flashcard must have one QUESTION and one ANSWER.
-- Do not add explanations before or after the flashcards.
-
-Format exactly like this:
-
-QUESTION: question text
-ANSWER: answer text
-
-QUESTION: question text
-ANSWER: answer text
 
 Study Material:
-{relevantText}
+{material}
+
+Student Question:
+{question}
+
+Instructions:
+- Every question must be complete and understandable on its own.
+- Do not use vague questions such as "What are there?", "What are they?", or "What is it?"
+- Include the specific topic in the question.
+- The question must make sense without seeing the study material.
+- Answer only the student's specific question.
+- Keep the answer concise and focused.
+- Use 2 to 4 sentences unless more explanation is necessary.
+- Do not include unrelated information from the study material.
+- Explain the answer clearly in student-friendly language.
+- Do not make up information that is not supported by the study material.
+- If the answer cannot be found in the study material, say that the information was not found.
+
+
+Answer:
 """
 
         result = llm(
             prompt,
-            max_new_tokens=600,
+            max_new_tokens=200,
             do_sample=False
         )
 
-        generatedText = result[0]["generated_text"]
+        answer = result[0]["generated_text"]
 
-        print("\n----- AI OUTPUT -----")
-        print(generatedText)
-        print("----- END OUTPUT -----\n")
+        if "Answer:" in answer:
+            answer = answer.split("Answer:", 1)[1].strip()
 
-        cards = parseFlashcards(
-            generatedText
-        )[:number]
-
-        if cards:
-            return cards
-
-        return [{
-            "question": "The AI generated an unexpected format.",
-            "answer": generatedText
-        }]
+        return answer
 
     except Exception as error:
-
-        return [{
-            "question": "Flashcards could not be generated.",
-            "answer": str(error)
-        }]
-
-
-def parseFlashcards(text):
-
-    cards = []
-
-    question = None
-    answer = None
-
-    lines = text.splitlines()
-
-    for line in lines:
-
-        line = line.strip()
-
-        if line == "":
-            continue
-
-        if line.upper().startswith(
-            "QUESTION:"
-        ):
-
-            if question and answer:
-
-                cards.append(
-                    {
-                        "question": question,
-                        "answer": answer
-                    }
-                )
-
-            question = line.split(
-                ":",
-                1
-            )[1].strip()
-
-            answer = None
-
-        elif line.upper().startswith(
-            "ANSWER:"
-        ):
-
-            if question:
-
-                answer = line.split(
-                    ":",
-                    1
-                )[1].strip()
-
-    if question and answer:
-
-        cards.append(
-            {
-                "question": question,
-                "answer": answer
-            }
-        )
-
-    return cards
+        return "StudySense could not generate an answer.\n\n" + str(error)
 # --------------------------------------------------
 # FLASHCARD RESULTS
 # --------------------------------------------------
