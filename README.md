@@ -14,10 +14,15 @@ track areas they are struggling
 receive study recommendations based on performance
 
 Data:
-The prototype uses Ai generated Biology and Psychology documents as sample data to allow the data processing and AI portions of the project to be tested before using actual student uploaded materials. Owen will be used to create flashcards and answer questions the student may have.
+The prototype uses Ai generated Biology and Psychology documents as sample data to allow the data processing and AI portions of the project to be tested before using actual student uploaded materials. Python and Owen will be used to create flashcards and answer questions the student may have.
 
 Data Cleaning:
-The documents will be converted into usable text and cleaned before being processed by the AI. Cleaning will include removing unnecessary formatting, duplicate content, empty sections, headers, and other information that is not useful for studying. Longer documents will also be divided into smaller sections so that the AI can process them effectively.
+
+The data for this project consists of study materials that are collected for use in the StudySense application. The materials can come from TXT, PDF, and DOCX files uploaded by the user, as well as notes entered directly into the application.
+The original uploaded files are stored in the data/raw directory. The extracted and cleaned versions of the materials are stored in the data/cleaned directory. The cleaned text is also stored in the application's studyData.json file so that it can be reused by the study features.
+The cleaning process extracts text from the uploaded files and removes unnecessary formatting and other material that is not useful for studying. The cleaned text is then used by StudySense for features such as asking questions about the material and generating flashcards.
+The size of the dataset will depend on the study materials collected. The initial dataset contains the study files currently being used to test the application. Additional study materials can be added as the project develops.
+
 
 Workflow:
 Students will upload their study materials. The system will process and clean the files and make the information available to the AI. Students can then ask questions or begin a study session.
