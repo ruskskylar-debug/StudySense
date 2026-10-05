@@ -14,10 +14,10 @@ track areas they are struggling
 receive study recommendations based on performance
 
 Data:
-The initial prototype will use Ai generated Biology documents as sample data to allow the data processing and AI portions of the project to be tested before using actual student uploaded materials. Owen will be used to create flashcards and answer questions the student may have.
+The prototype uses Ai generated Biology and Psychology documents as sample data to allow the data processing and AI portions of the project to be tested before using actual student uploaded materials. Owen will be used to create flashcards and answer questions the student may have.
 
 Data Cleaning:
-The documents will be converted into usable text and cleaned before being processed by the AI. Cleaning will include removing unnecessary formatting, duplicate content, empty sections, and other information that is not useful for studying. Longer documents will also be divided into smaller sections so that the AI can process them effectively.
+The documents will be converted into usable text and cleaned before being processed by the AI. Cleaning will include removing unnecessary formatting, duplicate content, empty sections, headers, and other information that is not useful for studying. Longer documents will also be divided into smaller sections so that the AI can process them effectively.
 
 Workflow:
 Students will upload their study materials. The system will process and clean the files and make the information available to the AI. Students can then ask questions or begin a study session.
