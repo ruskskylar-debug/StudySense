@@ -1,0 +1,57 @@
+Memory
+  Memory is the ability to encode, store, and retrieve information.
+ Psychologists study memory to understand how information is learned, retained, and
+later accessed.
+
+The Three Basic Processes
+  Encoding: transforming information into a form that can be stored.
+ Storage: maintaining information over time.
+ Retrieval: bringing stored information back when it is needed.
+
+Sensory Memory
+  Sensory memory briefly holds information received through the senses.
+ It allows the brain to retain a very short record of sights, sounds, and other sensory
+information.
+ Most sensory information disappears quickly unless attention is directed toward it.
+
+Short-Term and Working Memory
+  Short-term memory holds a limited amount of information for a short period.
+ Working memory allows information to be temporarily held and manipulated while
+completing a task.
+ Repeating information can help keep it active.
+
+Long-Term Memory
+  Long-term memory can store information for much longer periods.
+ Explicit memory involves information that can be consciously recalled.
+ Implicit memory influences behavior without requiring conscious recall.
+
+Encoding and Rehearsal
+  Rehearsal involves repeating information to help maintain it in memory.
+ Elaborative rehearsal connects new information to knowledge that is already stored.
+ Making meaningful connections can make information easier to remember.
+
+Why Do We Forget?
+  Forgetting can happen when information was not encoded successfully.
+ Memories can also become difficult to retrieve.
+ Interference occurs when other information makes it harder to remember something.
+ New information can interfere with older memories, and older information can interfere
+with newer learning.
+
+Recall vs. Recognition
+  Recall requires retrieving information without the same type of direct prompt.
+ Recognition involves identifying information that has been encountered before.
+ Recognition is often easier because the available information provides additional
+cues.
+
+Memory and Sleep
+  Sleep is associated with memory consolidation.
+ Consolidation is the process through which newly learned information becomes
+more stable in long-term memory.
+ Sleep can therefore play an important role in learning and remembering.
+
+Key Terms
+  Encoding: converting information into a form that can be stored.
+ Storage: maintaining information over time.
+ Retrieval: accessing stored information.
+ Working memory: temporarily holding and using information.
+ Consolidation: stabilizing newly learned information.
