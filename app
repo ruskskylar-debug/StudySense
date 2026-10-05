@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
 import json
 import re
+import random
+import uuid
+from datetime import datetime
 
 from src.dataInput import readFile, cleanText
 
@@ -10,7 +13,8 @@ app = Flask(__name__)
 app.secret_key = "studysense-secret-key"
 
 
-DATA_FILE = "data/studyData.json"
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_FILE = os.path.join(APP_DIR, "data", "studyData.json")
 
 
 # --------------------------------------------------
@@ -65,13 +69,22 @@ def loadStudyData():
         encoding="utf-8"
     ) as file:
 
-        return json.load(file)
+        data = json.load(file)
+
+    # Make sure every subject has the fields used by the current
+    # flashcard/progress system, including older studyData.json files.
+    for subjectData in data.get("subjects", {}).values():
+        subjectData.setdefault("flashcardSets", [])
+        subjectData.setdefault("flashcardResults", [])
+        subjectData.setdefault("weakPoints", [])
+
+    return data
 
 
 def saveStudyData(data):
 
     os.makedirs(
-        "data",
+        os.path.dirname(DATA_FILE),
         exist_ok=True
     )
 
@@ -87,6 +100,27 @@ def saveStudyData(data):
             indent=4
         )
 
+
+
+def getSubjectTopics(subjectData):
+
+    topics = []
+    seenTopics = set()
+
+    for material in subjectData.get("materials", []):
+
+        topic = material.get("topic", "").strip()
+
+        if not topic:
+            continue
+
+        topicKey = topic.lower()
+
+        if topicKey not in seenTopics:
+            topics.append(topic)
+            seenTopics.add(topicKey)
+
+    return sorted(topics, key=str.lower)
 
 def getSubjectNames():
 
@@ -215,14 +249,14 @@ def upload():
     ):
 
         os.makedirs(
-            "data/raw",
+            os.path.join(APP_DIR, "data", "raw"),
             exist_ok=True
         )
 
         fileName = uploadedFile.filename
 
         filePath = os.path.join(
-            "data/raw",
+            APP_DIR, "data", "raw",
             fileName
         )
 
@@ -242,7 +276,7 @@ def upload():
         )
 
         os.makedirs(
-            "data/cleaned",
+            os.path.join(APP_DIR, "data", "cleaned"),
             exist_ok=True
         )
 
@@ -255,7 +289,7 @@ def upload():
         )
 
         cleanedFilePath = os.path.join(
-            "data/cleaned",
+            APP_DIR, "data", "cleaned",
             cleanedFileName
         )
 
@@ -305,6 +339,52 @@ def upload():
         )
 
     return "Please upload a file or enter text."
+
+
+# --------------------------------------------------
+# DELETE STUDY MATERIAL
+# --------------------------------------------------
+
+@app.route("/delete-material", methods=["POST"])
+def deleteMaterial():
+
+    subject = request.form.get("subject", "")
+    materialIndex = request.form.get("materialIndex", "")
+
+    data = loadStudyData()
+
+    if subject not in data["subjects"]:
+        return redirect(url_for("home"))
+
+    try:
+        materialIndex = int(materialIndex)
+    except (TypeError, ValueError):
+        return redirect(url_for("home"))
+
+    materials = data["subjects"][subject].get("materials", [])
+
+    if materialIndex < 0 or materialIndex >= len(materials):
+        return redirect(url_for("home"))
+
+    material = materials[materialIndex]
+    fileName = material.get("fileName", "")
+
+    if fileName and fileName != "Text Input":
+        rawFilePath = os.path.join(APP_DIR, "data", "raw", fileName)
+        cleanedFileName = fileName.rsplit(".", 1)[0] + "_cleaned.txt" if "." in fileName else fileName + "_cleaned.txt"
+        cleanedFilePath = os.path.join(APP_DIR, "data", "cleaned", cleanedFileName)
+
+        if os.path.exists(rawFilePath):
+            os.remove(rawFilePath)
+
+        if os.path.exists(cleanedFilePath):
+            os.remove(cleanedFilePath)
+
+    materials.pop(materialIndex)
+
+    saveStudyData(data)
+
+    return redirect(url_for("home"))
 
 
 # --------------------------------------------------
@@ -361,8 +441,8 @@ def answerQuestion():
     )
 
     answer = generateAnswer(
-        materialText,
-        question
+        question,
+        materialText
     )
 
     materials = []
@@ -427,6 +507,71 @@ def findRelevantMaterial(text, question, maxCharacters=3500):
 # --------------------------------------------------
 
 
+def rebuildWeakPoints(subjectData):
+
+    weakPoints = []
+    seenQuestions = set()
+
+    for flashcardSet in subjectData.get("flashcardSets", []):
+
+        if flashcardSet.get("choice") == "weak":
+            continue
+
+        for card in flashcardSet.get("cards", []):
+
+            if card.get("result") not in ["almost", "needHelp"]:
+                continue
+
+            question = card.get("question", "").strip()
+
+            if question and question not in seenQuestions:
+                weakPoints.append(question)
+                seenQuestions.add(question)
+
+    subjectData["weakPoints"] = weakPoints
+    return weakPoints
+
+
+def getWeakFlashcards(subjectData):
+
+    weakCards = []
+    seenQuestions = set()
+
+    flashcardSets = subjectData.get(
+        "flashcardSets",
+        []
+    )
+
+    for flashcardSet in reversed(flashcardSets):
+
+        if flashcardSet.get("choice") == "weak":
+            continue
+
+        for cardIndex, card in enumerate(
+            flashcardSet.get("cards", [])
+        ):
+
+            if card.get("result") not in ["almost", "needHelp"]:
+                continue
+
+            question = card.get("question", "").strip()
+
+            if not question or question in seenQuestions:
+                continue
+
+            weakCards.append({
+                "question": question,
+                "answer": card.get("answer", ""),
+                "result": None,
+                "sourceSetId": flashcardSet.get("id"),
+                "sourceCardIndex": cardIndex
+            })
+
+            seenQuestions.add(question)
+
+    return weakCards
+
+
 @app.route(
     "/flashcards",
     methods=["GET"]
@@ -440,8 +585,16 @@ def flashcards():
         ""
     )
 
+    setId = request.args.get(
+        "set_id",
+        ""
+    )
+
     materials = []
+    topics = []
     weakPoints = []
+    cards = None
+    activeSet = None
 
     if selectedSubject in data["subjects"]:
 
@@ -454,17 +607,36 @@ def flashcards():
             []
         )
 
+        topics = getSubjectTopics(subjectData)
+
         weakPoints = subjectData.get(
             "weakPoints",
             []
         )
 
+        for flashcardSet in subjectData.get(
+            "flashcardSets",
+            []
+        ):
+
+            if flashcardSet.get("id") == setId:
+
+                activeSet = flashcardSet
+                cards = flashcardSet.get(
+                    "cards",
+                    []
+                )
+                break
+
     return render_template(
         "flashcards.html",
         subjects=data["subjects"],
         materials=materials,
+        topics=topics,
         weakPoints=weakPoints,
-        selectedSubject=selectedSubject
+        selectedSubject=selectedSubject,
+        cards=cards,
+        activeSet=activeSet
     )
 
 
@@ -473,7 +645,6 @@ def flashcards():
     methods=["POST"]
 )
 def createFlashcards():
-    print("CREATE FLASHCARDS ROUTE HIT")
 
     choice = request.form.get(
         "choice"
@@ -484,17 +655,9 @@ def createFlashcards():
     )
 
     topic = request.form.get(
-        "topic"
-    )
-
-    number = request.form.get(
-        "number"
-    )
-
-    try:
-        number = min(int(number), 20)
-    except:
-        number = 10
+        "topic",
+        ""
+    ).strip()
 
     data = loadStudyData()
 
@@ -504,14 +667,19 @@ def createFlashcards():
             "flashcards.html",
             subjects=data["subjects"],
             materials=[],
+            topics=[],
             weakPoints=[],
             selectedSubject="",
+            cards=None,
+            activeSet=None,
             error="Please choose a subject first."
         )
 
     subjectData = data["subjects"][
         subject
     ]
+
+    topics = getSubjectTopics(subjectData)
 
     subjectData.setdefault(
         "materials",
@@ -524,202 +692,475 @@ def createFlashcards():
     )
 
     subjectData.setdefault(
-        "flashcardResults",
+        "flashcardSets",
         []
     )
 
-    materialText = ""
+    # Weak Points uses every card currently marked Almost or Need help.
+    # The user does not choose a number for this set.
+    if choice == "weak":
 
-    if choice == "all":
+        # Resume an unfinished weak-point review instead of creating
+        # another copy of the same review set.
+        for existingSet in reversed(subjectData.get("flashcardSets", [])):
+            if (
+                existingSet.get("choice") == "weak"
+                and existingSet.get("cards")
+                and not all(
+                    card.get("result") is not None
+                    for card in existingSet.get("cards", [])
+                )
+            ):
+                return redirect(
+                    url_for(
+                        "flashcards",
+                        subject=subject,
+                        set_id=existingSet.get("id")
+                    )
+                )
 
-        for material in subjectData["materials"]:
+        cards = getWeakFlashcards(
+            subjectData
+        )
 
-            materialText += (
-                material["text"]
-                + "\n"
+        if not cards:
+
+            return render_template(
+                "flashcards.html",
+                subjects=data["subjects"],
+                materials=subjectData["materials"],
+                topics=topics,
+                weakPoints=subjectData["weakPoints"],
+                selectedSubject=subject,
+                cards=None,
+                activeSet=None,
+                error=(
+                    "There are no weak-point flashcards yet. "
+                    "Mark cards as Almost or Need help first."
+                )
             )
 
-    elif choice == "topic":
+        title = "Weak Points Review"
 
-        if not topic:
-            topic = ""
+    else:
 
-        for material in subjectData["materials"]:
+        number = request.form.get(
+            "number",
+            "10"
+        )
 
-            if (
-                material["topic"].lower()
-                == topic.lower()
-            ):
+        try:
+            number = max(
+                1,
+                min(int(number), 20)
+            )
+        except (TypeError, ValueError):
+            number = 10
+
+        materialText = ""
+
+        if choice == "all":
+
+            for material in subjectData["materials"]:
 
                 materialText += (
                     material["text"]
-                    + "\n"
+                    + "\n\n"
                 )
 
-    elif choice == "weak":
+            title = "All Material Review"
 
-        for weakPoint in subjectData["weakPoints"]:
+        elif choice == "topic":
 
-            materialText += (
-                weakPoint
-                + "\n"
+            if not topic:
+
+                return render_template(
+                    "flashcards.html",
+                    subjects=data["subjects"],
+                    materials=subjectData["materials"],
+                    topics=topics,
+                    weakPoints=subjectData["weakPoints"],
+                    selectedSubject=subject,
+                    cards=None,
+                    activeSet=None,
+                    error="Please choose a topic."
+                )
+
+            for material in subjectData["materials"]:
+
+                if material.get("topic", "").strip().casefold() == topic.strip().casefold():
+
+                    materialText += (
+                        material["text"]
+                        + "\n\n"
+                    )
+
+            title = f"{topic} Review"
+
+        else:
+
+            return render_template(
+                "flashcards.html",
+                subjects=data["subjects"],
+                materials=subjectData["materials"],
+                topics=topics,
+                weakPoints=subjectData["weakPoints"],
+                selectedSubject=subject,
+                cards=None,
+                activeSet=None,
+                error="Please choose what you want to study."
             )
 
-    elif choice == "random":
+        if materialText.strip() == "":
 
-        for material in subjectData["materials"]:
-
-            materialText += (
-                material["text"]
-                + "\n"
+            return render_template(
+                "flashcards.html",
+                subjects=data["subjects"],
+                materials=subjectData["materials"],
+                topics=topics,
+                weakPoints=subjectData["weakPoints"],
+                selectedSubject=subject,
+                cards=None,
+                activeSet=None,
+                error="There is not enough study material for this subject yet."
             )
 
-    if materialText.strip() == "":
-
-        return render_template(
-            "flashcards.html",
-            subjects=data["subjects"],
-            materials=subjectData["materials"],
-            weakPoints=subjectData["weakPoints"],
-            selectedSubject=subject,
-            error="There is not enough study material for this subject yet."
+        cards = generateFlashcards(
+            materialText,
+            number
         )
 
-    cards = generateFlashcards(
-        materialText,
-        number
+        if not cards:
+
+            return render_template(
+                "flashcards.html",
+                subjects=data["subjects"],
+                materials=subjectData["materials"],
+                topics=topics,
+                weakPoints=subjectData["weakPoints"],
+                selectedSubject=subject,
+                cards=None,
+                activeSet=None,
+                error="There was not enough information to create flashcards."
+            )
+
+    setId = uuid.uuid4().hex[:12]
+
+    for card in cards:
+        card.setdefault("result", None)
+
+    flashcardSet = {
+        "id": setId,
+        "title": title,
+        "choice": choice,
+        "topic": topic,
+        "createdAt": datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        ),
+        "cards": cards
+    }
+
+    subjectData["flashcardSets"].append(
+        flashcardSet
     )
 
-    return render_template(
-        "flashcards.html",
-        subjects=data["subjects"],
-        materials=subjectData["materials"],
-        weakPoints=subjectData["weakPoints"],
-        selectedSubject=subject,
-        cards=cards
+    saveStudyData(data)
+
+    if request.headers.get("X-Requested-With") == "fetch":
+        return jsonify({"success": True})
+
+    return redirect(
+        url_for(
+            "flashcards",
+            subject=subject,
+            set_id=setId
+        )
     )
+
+
+def cleanFlashcardText(text):
+
+    text = text.replace("\r", "\n")
+
+    lines = [
+        line.strip()
+        for line in text.split("\n")
+    ]
+
+    blocks = []
+    current = ""
+    isBullet = False
+
+    for line in lines:
+
+        if not line:
+            if current:
+                blocks.append(current.strip())
+                current = ""
+                isBullet = False
+            continue
+
+        bulletMatch = re.match(
+            r"^[•●▪◦]\s*(.*)$",
+            line
+        )
+
+        if bulletMatch:
+
+            if current:
+                blocks.append(current.strip())
+
+            current = bulletMatch.group(1).strip()
+            isBullet = True
+
+        elif isBullet:
+
+            current += " " + line
+
+        else:
+
+            if current:
+                blocks.append(current.strip())
+
+            current = line
+
+    if current:
+        blocks.append(current.strip())
+
+    cleanedBlocks = []
+
+    for block in blocks:
+
+        block = re.sub(
+            r"\s+",
+            " ",
+            block
+        ).strip()
+
+        # Remove short slide headings such as:
+        # Memory
+        # Sensory Memory
+        # The Three Basic Processes
+        # Long-Term Memory
+        #
+        # The actual information is contained in the
+        # bullet points underneath them.
+        if (
+            not re.search(r"[.!?]$", block)
+            and len(block.split()) <= 10
+        ):
+            continue
+
+        # Turn slide-style definitions such as:
+        # Encoding: transforming information...
+        #
+        # into:
+        # Encoding is transforming information...
+        definitionMatch = re.match(
+            r"^([A-Za-z][A-Za-z0-9 /&()\-\']{0,80}):\s+(.+)$",
+            block
+        )
+
+        if definitionMatch:
+            block = (
+                definitionMatch.group(1)
+                + " is "
+                + definitionMatch.group(2)
+            )
+
+        if not re.search(r"[.!?]$", block):
+            block += "."
+
+        cleanedBlocks.append(block)
+
+    return " ".join(cleanedBlocks)
+
+
+    
+def addFlashcard(cards, question, answer, seenQuestions, number):
+    question = re.sub(r"\s+", " ", question).strip()
+    answer = re.sub(r"\s+", " ", answer).strip()
+
+    if not question or not answer:
+        return
+
+    question = question[0].upper() + question[1:]
+
+    if not question.endswith("?"):
+        question += "?"
+
+    if question.lower() in seenQuestions:
+        return
+
+    if len(question.split()) < 4:
+        return
+
+    cards.append({
+        "question": question,
+        "answer": answer,
+        "result": None
+    })
+
+    seenQuestions.add(question.lower())
 
 
 def generateFlashcards(text, number):
 
+    text = cleanFlashcardText(text)
     cards = []
+    seenQuestions = set()
 
-    sentences = re.split(r'[.!?]', text)
+    # Remove the common biology title if it was joined to the first sentence.
+    text = re.sub(
+        r"^.*?\bCells are\b",
+        "Cells are",
+        text,
+        count=1,
+        flags=re.IGNORECASE
+    )
+
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+
+    # Shuffle eligible material so creating another set can produce
+    # different questions when there is enough material to choose from.
+    random.shuffle(sentences)
+
+    def cleanSubject(subject):
+        subject = re.sub(r"\s+", " ", subject.strip())
+
+        if not subject:
+            return subject
+
+        firstWord = subject.split(" ", 1)[0]
+
+        if firstWord.lower() in ["a", "an", "the"]:
+            return firstWord.lower() + (
+                subject[len(firstWord):]
+                if len(subject) > len(firstWord)
+                else ""
+            )
+
+        # Keep acronyms such as DNA uppercase.
+        if firstWord.isupper() and len(firstWord) <= 5:
+            return subject
+
+        return firstWord.lower() + (
+            subject[len(firstWord):]
+            if len(subject) > len(firstWord)
+            else ""
+        )
 
     for sentence in sentences:
-
         sentence = sentence.strip()
 
-        if len(sentence) < 30:
+        if len(sentence) < 25:
             continue
 
-        lowerSentence = sentence.lower()
-
+        lower = sentence.lower()
         question = None
-        answer = sentence
 
-        if " is " in lowerSentence:
+        # Skip headings and pronoun-only openings.
+        if lower.startswith(("their ", "these ", "this ", "it ", "they ")):
+            continue
 
-            term = sentence.split(" is ")[0].strip()
+        # HIGH-QUALITY PATTERNS FIRST
 
-            question = f"What is {term}?"
+        if re.match(r"^Every living organism is made of\s+", sentence, re.I):
+            question = "What are all living organisms made of"
 
-        elif " are " in lowerSentence:
+        elif re.match(r"^(.+?)\s+do not have\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+do not have\s+", sentence, re.I)
+            subject = cleanSubject(m.group(1))
+            question = f"What do {subject} not have"
 
-            parts = sentence.split(" are ", 1)
+        elif re.match(r"^(.+?)\s+is composed of\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+is composed of\s+", sentence, re.I)
+            subject = cleanSubject(m.group(1))
+            question = f"What is {subject} composed of"
 
-            if parts[0].strip().lower() == "there":
-                question = f"What does the study material identify in this statement?"
-            else:
-                question = f"What are {parts[0].strip()}?"
+        elif re.match(r"^(.+?)\s+consists of\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+consists of\s+", sentence, re.I)
+            subject = cleanSubject(m.group(1))
+            question = f"What does {subject} consist of"
 
-        elif " helps " in lowerSentence:
+        elif re.match(r"^(.+?)\s+are connected processes\.?$", sentence, re.I):
+            m = re.match(r"^(.+?)\s+are connected processes\.?$", sentence, re.I)
+            subject = cleanSubject(m.group(1))
+            question = f"What are {subject}"
 
-            parts = sentence.split(" helps ", 1)
+        elif re.match(
+            r"^Mitosis and meiosis have different purposes\.?$",
+            sentence,
+            re.I
+        ):
+            question = "What is different about the purposes of mitosis and meiosis"
 
-            question = f"How does {parts[0].strip()} help?"
+        elif re.match(r"^(.+?)\s+is\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+is\s+", sentence, re.I)
+            subject = cleanSubject(m.group(1))
 
-        elif " allows " in lowerSentence:
+            if len(subject.split()) <= 8:
+                question = f"What is {subject}"
 
-            parts = sentence.split(" allows ", 1)
+        elif re.match(r"^(.+?)\s+are\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+are\s+", sentence, re.I)
+            subject = cleanSubject(m.group(1))
 
-            question = f"What does {parts[0].strip()} allow?"
+            if len(subject.split()) <= 8:
+                question = f"What are {subject}"
 
-        elif " used for " in lowerSentence:
+        elif re.match(r"^(.+?)\s+has\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+has\s+", sentence, re.I)
+            subject = cleanSubject(m.group(1))
 
-            parts = sentence.split(" used for ", 1)
+            if len(subject.split()) <= 8:
+                question = f"What does {subject} have"
 
-            question = f"What is {parts[0].strip()} used for?"
+        elif re.match(r"^(.+?)\s+have\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+have\s+", sentence, re.I)
+            subject = cleanSubject(m.group(1))
 
-        elif " important " in lowerSentence:
+            if len(subject.split()) <= 8:
+                question = f"What do {subject} have"
 
-            question = f"Why is this concept important?"
+        elif re.match(r"^(.+?)\s+contains\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+contains\s+", sentence, re.I)
+            subject = cleanSubject(m.group(1))
 
-        elif " produces " in lowerSentence:
+            if len(subject.split()) <= 8:
+                question = f"What does {subject} contain"
 
-            parts = sentence.split(" produces ")
+        elif re.match(r"^(.+?)\s+produces\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+produces\s+", sentence, re.I)
+            subject = cleanSubject(m.group(1))
 
-            question = f"What does {parts[0].strip()} produce?"
+            if len(subject.split()) <= 8:
+                question = f"What does {subject} produce"
 
-        elif " contains " in lowerSentence:
+        elif re.match(r"^(.+?)\s+produce\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+produce\s+", sentence, re.I)
+            subject = cleanSubject(m.group(1))
 
-            parts = sentence.split(" contains ")
-
-            question = f"What does {parts[0].strip()} contain?"
-
-        elif " creates " in lowerSentence:
-
-            parts = sentence.split(" creates ")
-
-            question = f"What does {parts[0].strip()} create?"
-
-        elif " includes " in lowerSentence:
-
-            parts = sentence.split(" includes ")
-
-            question = f"What does {parts[0].strip()} include?"
-        elif " means " in lowerSentence:
-
-            parts = sentence.split(" means ", 1)
-
-            question = f"What does {parts[0].strip()} mean?"
-
-        elif " refers to " in lowerSentence:
-
-            parts = sentence.split(" refers to ", 1)
-
-            question = f"What does {parts[0].strip()} refer to?"
-
-        elif " called " in lowerSentence:
-
-            parts = sentence.split(" called ", 1)
-
-            question = f"What is called {parts[1].strip()}?"
-
-        elif " consists of " in lowerSentence:
-
-            parts = sentence.split(" consists of ", 1)
-
-            question = f"What does {parts[0].strip()} consist of?"
+            if len(subject.split()) <= 8:
+                question = f"What do {subject} produce"
 
         if question:
-
-            cards.append({
-                "question": question,
-                "answer": answer
-            })
+            addFlashcard(
+                cards,
+                question,
+                sentence,
+                seenQuestions,
+                number
+            )
 
         if len(cards) >= number:
             break
 
-    if not cards:
-
-        cards.append({
-            "question": "No flashcards could be created.",
-            "answer": "There was not enough study material."
-        })
-
     return cards
+
+# --------------------------------------------------
+# AI ANSWERS
+# --------------------------------------------------
 
 
 def generateAnswer(question, material):
@@ -729,7 +1170,6 @@ You are the StudySense AI Assistant.
 
 Use the study material provided below to answer the student's question.
 
-
 Study Material:
 {material}
 
@@ -737,37 +1177,69 @@ Student Question:
 {question}
 
 Instructions:
-- Every question must be complete and understandable on its own.
-- Do not use vague questions such as "What are there?", "What are they?", or "What is it?"
-- Include the specific topic in the question.
-- The question must make sense without seeing the study material.
-- Answer only the student's specific question.
-- Keep the answer concise and focused.
-- Use 2 to 4 sentences unless more explanation is necessary.
-- Do not include unrelated information from the study material.
-- Explain the answer clearly in student-friendly language.
+- Answer only the question that was asked.
+- Keep the answer short and focused.
+- Use 1 to 3 sentences.
+- Do not add unrelated information.
 - Do not make up information that is not supported by the study material.
-- If the answer cannot be found in the study material, say that the information was not found.
-
 
 Answer:
 """
 
         result = llm(
             prompt,
-            max_new_tokens=200,
+            max_new_tokens=100,
             do_sample=False
         )
 
         answer = result[0]["generated_text"]
 
         if "Answer:" in answer:
-            answer = answer.split("Answer:", 1)[1].strip()
+            answer = answer.split(
+                "Answer:",
+                1
+            )[1].strip()
+
+        sentences = re.split(
+            r"(?<=[.!?])\s+",
+            answer
+        )
+
+        if (
+            len(sentences) > 1
+            and not re.search(r"[.!?]$", sentences[-1])
+        ):
+            sentences = sentences[:-1]
+
+        answer = " ".join(
+            sentences
+        ).strip()
+
+        # Qwen sometimes gives a useful answer and then adds the fallback
+        # message even when the information was found. Remove that extra
+        # message when an actual answer came before it.
+        fallback = "I cannot find that information in the study material."
+
+        if fallback in answer:
+            answerBeforeFallback = answer.split(
+                fallback,
+                1
+            )[0].strip()
+
+            if answerBeforeFallback:
+                answer = answerBeforeFallback
+            else:
+                answer = fallback
 
         return answer
 
     except Exception as error:
-        return "StudySense could not generate an answer.\n\n" + str(error)
+        return (
+            "StudySense could not generate an answer.\n\n"
+            + str(error)
+        )
+
+
 # --------------------------------------------------
 # FLASHCARD RESULTS
 # --------------------------------------------------
@@ -782,79 +1254,172 @@ def flashcardResult():
         "subject"
     )
 
-    question = request.form.get(
-        "question"
+    setId = request.form.get(
+        "setId"
+    )
+
+    cardIndex = request.form.get(
+        "cardIndex"
     )
 
     result = request.form.get(
         "result"
     )
 
-    data = loadStudyData()
-
-    if subject not in data["subjects"]:
-
-        return redirect(
-            url_for("flashcards")
-        )
-
     if result not in [
         "gotIt",
         "almost",
         "needHelp"
     ]:
+        return jsonify({"success": False})
 
-        return redirect(
-            url_for(
-                "flashcards",
-                subject=subject
-            )
+    data = loadStudyData()
+
+    if subject not in data["subjects"]:
+        return jsonify({"success": False})
+
+    subjectData = data["subjects"][subject]
+    subjectData.setdefault("flashcardSets", [])
+    flashcardSets = subjectData["flashcardSets"]
+
+    targetSet = None
+
+    for flashcardSet in flashcardSets:
+        if flashcardSet.get("id") == setId:
+            targetSet = flashcardSet
+            break
+
+    if targetSet is None:
+        return jsonify({"success": False})
+
+    try:
+        cardIndex = int(cardIndex)
+    except (TypeError, ValueError):
+        return jsonify({"success": False})
+
+    cards = targetSet.get("cards", [])
+
+    if cardIndex < 0 or cardIndex >= len(cards):
+        return jsonify({"success": False})
+
+    cards[cardIndex]["result"] = result
+
+    # Weak-point cards remember which original card they came from.
+    # Do not change the original saved set until the entire Weak Points
+    # review is finished. This keeps the previous set's counts accurate
+    # while the review is still in progress.
+    selectedCard = cards[cardIndex]
+
+    sourceSetId = selectedCard.get("sourceSetId")
+    sourceCardIndex = selectedCard.get("sourceCardIndex")
+
+    reviewComplete = True
+
+    if targetSet.get("choice") == "weak":
+        reviewComplete = all(
+            card.get("result") is not None
+            for card in cards
         )
 
-    data["subjects"][subject].setdefault(
+    if sourceSetId and reviewComplete:
+        for sourceSet in flashcardSets:
+            if sourceSet.get("id") != sourceSetId:
+                continue
+
+            sourceCards = sourceSet.get("cards", [])
+
+            if (
+                isinstance(sourceCardIndex, int)
+                and 0 <= sourceCardIndex < len(sourceCards)
+            ):
+                sourceCards[sourceCardIndex]["result"] = result
+
+    # Keep saved weak-point copies synchronized with their source card
+    # only after the whole weak-point review is complete.
+    if sourceSetId and reviewComplete:
+        for flashcardSet in flashcardSets:
+            for card in flashcardSet.get("cards", []):
+                if (
+                    card.get("sourceSetId") == sourceSetId
+                    and card.get("sourceCardIndex") == sourceCardIndex
+                ):
+                    card["result"] = result
+
+    # Normal flashcard results update Weak Points immediately.
+    # A Weak Points review updates them only after all of its cards
+    # have been answered.
+    if targetSet.get("choice") == "weak":
+        if reviewComplete:
+            rebuildWeakPoints(subjectData)
+    else:
+        rebuildWeakPoints(subjectData)
+
+    # Keep the older results list updated for compatibility with
+    # existing saved data.
+    subjectData.setdefault(
         "flashcardResults",
         []
     )
 
-    data["subjects"][subject].setdefault(
-        "weakPoints",
-        []
+    question = cards[cardIndex].get(
+        "question",
+        ""
     )
 
-    flashcardResultData = {
-        "question": question,
-        "result": result
-    }
+    existingResult = None
 
-    data["subjects"][subject][
-        "flashcardResults"
-    ].append(
-        flashcardResultData
-    )
+    for savedResult in subjectData["flashcardResults"]:
+        if savedResult.get("question") == question:
+            existingResult = savedResult
+            break
 
-    if result == "needHelp":
+    if existingResult:
+        existingResult["result"] = result
+    else:
+        subjectData["flashcardResults"].append({
+            "question": question,
+            "result": result
+        })
 
-        if (
-            question
-            not in data["subjects"][subject]["weakPoints"]
-        ):
-
-            data["subjects"][subject][
-                "weakPoints"
-            ].append(
-                question
-            )
-
-    saveStudyData(
-        data
-    )
+    saveStudyData(data)
 
     return redirect(
         url_for(
-            "progress",
-            subject=subject
+            "flashcards",
+            subject=subject,
+            set_id=setId
         )
     )
+
+
+# --------------------------------------------------
+# DELETE FLASHCARD SET
+# --------------------------------------------------
+
+@app.route("/delete-flashcard-set", methods=["POST"])
+def deleteFlashcardSet():
+
+    subject = request.form.get("subject", "")
+    setId = request.form.get("setId", "")
+
+    data = loadStudyData()
+
+    if subject not in data["subjects"]:
+        return redirect(url_for("progress", subject=subject))
+
+    subjectData = data["subjects"][subject]
+    flashcardSets = subjectData.get("flashcardSets", [])
+
+    subjectData["flashcardSets"] = [
+        flashcardSet
+        for flashcardSet in flashcardSets
+        if flashcardSet.get("id") != setId
+    ]
+
+    rebuildWeakPoints(subjectData)
+    saveStudyData(data)
+
+    return redirect(url_for("progress", subject=subject))
 
 
 # --------------------------------------------------
@@ -874,6 +1439,7 @@ def progress():
     materials = []
     weakPoints = []
     flashcardResults = []
+    flashcardSets = []
 
     if selectedSubject in data["subjects"]:
 
@@ -886,40 +1452,79 @@ def progress():
             []
         )
 
-        weakPoints = subjectData.get(
-            "weakPoints",
-            []
-        )
+        weakPoints = []
 
         flashcardResults = subjectData.get(
             "flashcardResults",
             []
         )
 
-    totalResults = len(
-        flashcardResults
-    )
+        flashcardSets = [
+            flashcardSet
+            for flashcardSet in subjectData.get("flashcardSets", [])
+            if flashcardSet.get("choice") != "weak"
+        ]
+
+    # Weak Points are stored as a stable list while a review is in progress.
+    # They are rebuilt after normal result changes or after a complete weak-point review.
+    weakPoints = subjectData.get("weakPoints", []) if selectedSubject in data["subjects"] else []
+
+    # Add a simple summary to every saved set for display.
+    for flashcardSet in flashcardSets:
+
+        cards = flashcardSet.get(
+            "cards",
+            []
+        )
+
+        flashcardSet["gotItCount"] = sum(
+            1 for card in cards
+            if card.get("result") == "gotIt"
+        )
+
+        flashcardSet["almostCount"] = sum(
+            1 for card in cards
+            if card.get("result") == "almost"
+        )
+
+        flashcardSet["needHelpCount"] = sum(
+            1 for card in cards
+            if card.get("result") == "needHelp"
+        )
+
+    totalResults = 0
+    gotItCount = 0
+
+    for flashcardSet in flashcardSets:
+
+        for card in flashcardSet.get("cards", []):
+
+            if card.get("result"):
+
+                totalResults += 1
+
+                if card.get("result") == "gotIt":
+                    gotItCount += 1
+
+                elif card.get("result") == "almost":
+                    gotItCount += 0.5
 
     progressPercent = 0
 
     if totalResults > 0:
-
-        gotItCount = 0
-
-        for result in flashcardResults:
-
-            if result["result"] == "gotIt":
-
-                gotItCount += 1
-
-            elif result["result"] == "almost":
-
-                gotItCount += 0.5
-
         progressPercent = round(
-            (gotItCount / totalResults)
-            * 100
+            (gotItCount / totalResults) * 100
         )
+
+    savedResults = []
+
+    for flashcardSet in flashcardSets:
+        for card in flashcardSet.get("cards", []):
+            if card.get("result"):
+                savedResults.append({
+                    "question": card.get("question", ""),
+                    "result": card.get("result")
+                })
 
     return render_template(
         "progress.html",
@@ -928,108 +1533,8 @@ def progress():
         weakPoints=weakPoints,
         selectedSubject=selectedSubject,
         progressPercent=progressPercent,
-        flashcardResults=flashcardResults
-    )
-
-
-# --------------------------------------------------
-# ADD WEAK POINT
-# --------------------------------------------------
-
-@app.route(
-    "/add-weak-point",
-    methods=["POST"]
-)
-def addWeakPoint():
-
-    subject = request.form.get(
-        "subject"
-    )
-
-    weakPoint = request.form.get(
-        "weakPoint"
-    )
-
-    data = loadStudyData()
-
-    if subject in data["subjects"]:
-
-        data["subjects"][subject].setdefault(
-            "weakPoints",
-            []
-        )
-
-        if (
-            weakPoint
-            and weakPoint
-            not in data["subjects"][subject]["weakPoints"]
-        ):
-
-            data["subjects"][subject][
-                "weakPoints"
-            ].append(
-                weakPoint
-            )
-
-    saveStudyData(
-        data
-    )
-
-    return redirect(
-        url_for(
-            "progress",
-            subject=subject
-        )
-    )
-
-
-# --------------------------------------------------
-# REMOVE WEAK POINT
-# --------------------------------------------------
-
-@app.route(
-    "/remove-weak-point",
-    methods=["POST"]
-)
-def removeWeakPoint():
-
-    subject = request.form.get(
-        "subject"
-    )
-
-    weakPoint = request.form.get(
-        "weakPoint"
-    )
-
-    data = loadStudyData()
-
-    if subject in data["subjects"]:
-
-        data["subjects"][subject].setdefault(
-            "weakPoints",
-            []
-        )
-
-        if (
-            weakPoint
-            in data["subjects"][subject]["weakPoints"]
-        ):
-
-            data["subjects"][subject][
-                "weakPoints"
-            ].remove(
-                weakPoint
-            )
-
-    saveStudyData(
-        data
-    )
-
-    return redirect(
-        url_for(
-            "progress",
-            subject=subject
-        )
+        flashcardResults=savedResults,
+        flashcardSets=flashcardSets
     )
 
 
