@@ -77,7 +77,15 @@ def loadStudyData():
         subjectData.setdefault("flashcardSets", [])
         subjectData.setdefault("flashcardResults", [])
         subjectData.setdefault("weakPoints", [])
+        subjectData.setdefault("studyActivity", [])
+        subjectData.setdefault("studyTimeSeconds", 0)
 
+    data.setdefault("studyActivity", [])
+    data.setdefault("planner", {"notes": "", "tasks": [], "events": [], "weeklyGoalMinutes": 240})
+    data["planner"].setdefault("notes", "")
+    data["planner"].setdefault("tasks", [])
+    data["planner"].setdefault("events", [])
+    data["planner"].setdefault("weeklyGoalMinutes", 240)
     return data
 
 
@@ -208,11 +216,77 @@ def home():
 
     data = loadStudyData()
 
+    subjects = data["subjects"]
+    activity = data.get("studyActivity", [])
+    totalCardsReviewed = sum(1 for item in activity if item.get("type") == "review")
+    totalSeconds = sum(int(item.get("seconds", 0) or 0) for item in activity if item.get("type") == "time")
+    recentActivity = sorted(activity, key=lambda item: item.get("timestamp", ""), reverse=True)[:6]
+    recentSets = []
+    for subjectName, subjectData in subjects.items():
+        for savedSet in subjectData.get("flashcardSets", []):
+            if savedSet.get("choice") != "weak":
+                recentSets.append({"subject": subjectName, "id": savedSet.get("id"), "title": savedSet.get("title", "Study set"), "createdAt": savedSet.get("createdAt", ""), "cardCount": len(savedSet.get("cards", []))})
+    recentSets.sort(key=lambda item: item.get("createdAt", ""), reverse=True)
     return render_template(
         "home.html",
-        subjects=data["subjects"]
+        subjects=subjects,
+        totalCardsReviewed=totalCardsReviewed,
+        totalStudyMinutes=round(totalSeconds / 60),
+        recentActivity=recentActivity,
+        recentSets=recentSets[:4]
     )
 
+
+
+# --------------------------------------------------
+# STUDY PLANNER
+# --------------------------------------------------
+
+@app.route("/planner")
+def planner():
+    data = loadStudyData()
+    plan = data.get("planner", {})
+    subjects = data.get("subjects", {})
+    now = datetime.now()
+    week_start = (now.date()).toordinal() - now.weekday()
+    week_dates = {datetime.fromordinal(week_start + i).strftime("%Y-%m-%d") for i in range(7)}
+    week_seconds = sum(int(item.get("seconds", 0) or 0) for item in data.get("studyActivity", []) if item.get("type") == "time" and item.get("timestamp", "")[:10] in week_dates)
+    goal = max(1, int(plan.get("weeklyGoalMinutes", 240) or 240))
+    subject_progress = []
+    for name, subject_data in subjects.items():
+        cards = [c for fs in subject_data.get("flashcardSets", []) if fs.get("choice") != "weak" for c in fs.get("cards", [])]
+        reviewed = sum(1 for c in cards if c.get("result") in ("gotIt", "almost", "needHelp"))
+        subject_progress.append({"name": name, "reviewed": reviewed, "total": len(cards), "percent": round(reviewed / len(cards) * 100) if cards else 0})
+    return render_template("planner.html", planner=plan, subjects=subjects, weekMinutes=round(week_seconds / 60), weeklyGoal=goal, goalPercent=min(100, round(week_seconds / 60 / goal * 100)), subjectProgress=subject_progress)
+
+@app.route("/planner/save", methods=["POST"])
+def savePlanner():
+    payload = request.get_json(silent=True) or {}
+    data = loadStudyData()
+    plan = data.setdefault("planner", {"notes": "", "tasks": [], "events": [], "weeklyGoalMinutes": 240})
+    if "notes" in payload:
+        plan["notes"] = str(payload.get("notes", ""))[:20000]
+    if "weeklyGoalMinutes" in payload:
+        try: plan["weeklyGoalMinutes"] = max(15, min(3000, int(payload["weeklyGoalMinutes"])))
+        except (TypeError, ValueError): pass
+    if payload.get("action") == "add_task":
+        title = str(payload.get("title", "")).strip()[:180]
+        if title: plan.setdefault("tasks", []).append({"id": str(uuid.uuid4()), "title": title, "done": False, "dueDate": str(payload.get("dueDate", ""))[:10]})
+    elif payload.get("action") == "toggle_task":
+        for task in plan.setdefault("tasks", []):
+            if task.get("id") == payload.get("id"): task["done"] = not task.get("done", False)
+    elif payload.get("action") == "delete_task":
+        plan["tasks"] = [task for task in plan.setdefault("tasks", []) if task.get("id") != payload.get("id")]
+    elif payload.get("action") == "add_event":
+        title = str(payload.get("title", "")).strip()[:180]
+        date = str(payload.get("date", ""))[:10]
+        kind = payload.get("kind", "study")
+        if title and date and kind in ("study", "test", "assignment", "other"):
+            plan.setdefault("events", []).append({"id": str(uuid.uuid4()), "title": title, "date": date, "kind": kind})
+    elif payload.get("action") == "delete_event":
+        plan["events"] = [event for event in plan.setdefault("events", []) if event.get("id") != payload.get("id")]
+    saveStudyData(data)
+    return jsonify({"success": True, "planner": plan})
 
 # --------------------------------------------------
 # UPLOAD MATERIAL
@@ -340,6 +414,38 @@ def upload():
 
     return "Please upload a file or enter text."
 
+# --------------------------------------------------
+# VIEW STUDY MATERIAL
+# --------------------------------------------------
+
+@app.route("/view-material")
+def viewMaterial():
+
+    subject = request.args.get("subject", "")
+    materialIndex = request.args.get("materialIndex", "")
+
+    data = loadStudyData()
+
+    if subject not in data["subjects"]:
+        return redirect(url_for("home"))
+
+    try:
+        materialIndex = int(materialIndex)
+    except (TypeError, ValueError):
+        return redirect(url_for("home"))
+
+    materials = data["subjects"][subject].get("materials", [])
+
+    if materialIndex < 0 or materialIndex >= len(materials):
+        return redirect(url_for("home"))
+
+    material = materials[materialIndex]
+
+    return render_template(
+        "viewMaterial.html",
+        subject=subject,
+        material=material
+    )
 
 # --------------------------------------------------
 # DELETE STUDY MATERIAL
@@ -572,6 +678,38 @@ def getWeakFlashcards(subjectData):
     return weakCards
 
 
+def syncSavedWeakSets(subjectData):
+    """Remove weak-review copies whose original card is no longer weak."""
+    sourceSets = {
+        item.get("id"): item
+        for item in subjectData.get("flashcardSets", [])
+        if item.get("choice") != "weak"
+    }
+    for savedSet in subjectData.get("flashcardSets", []):
+        if savedSet.get("choice") != "weak":
+            continue
+        keptCards = []
+        for weakCard in savedSet.get("cards", []):
+            sourceSet = sourceSets.get(weakCard.get("sourceSetId"))
+            sourceIndex = weakCard.get("sourceCardIndex")
+            if sourceSet is None or not isinstance(sourceIndex, int):
+                # Older weak sets without source pointers cannot be safely
+                # reconciled, so keep them until the user finishes that set.
+                keptCards.append(weakCard)
+                continue
+            sourceCards = sourceSet.get("cards", [])
+            if not (0 <= sourceIndex < len(sourceCards)):
+                continue
+            sourceCard = sourceCards[sourceIndex]
+            if sourceCard.get("result") in ("almost", "needHelp"):
+                weakCard["question"] = sourceCard.get("question", weakCard.get("question", ""))
+                weakCard["answer"] = sourceCard.get("answer", weakCard.get("answer", ""))
+                # A new weak review should not inherit an old button state.
+                weakCard["result"] = None
+                keptCards.append(weakCard)
+        savedSet["cards"] = keptCards
+
+
 @app.route(
     "/flashcards",
     methods=["GET"]
@@ -622,6 +760,12 @@ def flashcards():
             if flashcardSet.get("id") == setId:
 
                 activeSet = flashcardSet
+                if not activeSet.get("sourceMaterials"):
+                    if activeSet.get("choice") == "all":
+                        activeSet["sourceMaterials"] = [m.get("fileName", "Study notes") for m in materials]
+                    elif activeSet.get("choice") == "topic":
+                        savedTopic = activeSet.get("topic", "").strip().casefold()
+                        activeSet["sourceMaterials"] = [m.get("fileName", "Study notes") for m in materials if m.get("topic", "").strip().casefold() == savedTopic]
                 cards = flashcardSet.get(
                     "cards",
                     []
@@ -700,6 +844,8 @@ def createFlashcards():
     # The user does not choose a number for this set.
     if choice == "weak":
 
+        syncSavedWeakSets(subjectData)
+
         # Resume an unfinished weak-point review instead of creating
         # another copy of the same review set.
         for existingSet in reversed(subjectData.get("flashcardSets", [])):
@@ -735,8 +881,7 @@ def createFlashcards():
                 cards=None,
                 activeSet=None,
                 error=(
-                    "There are no weak-point flashcards yet. "
-                    "Mark cards as Almost or Need help first."
+                    "You are all caught up! There are no weak-point cards to review right now."
                 )
             )
 
@@ -854,6 +999,7 @@ def createFlashcards():
         "title": title,
         "choice": choice,
         "topic": topic,
+        "sourceMaterials": [m.get("fileName", "Study notes") for m in subjectData.get("materials", []) if choice == "all" or (choice == "topic" and m.get("topic", "").strip().casefold() == topic.strip().casefold())] if choice != "weak" else [],
         "createdAt": datetime.now().strftime(
             "%Y-%m-%d %H:%M:%S"
         ),
@@ -1027,30 +1173,22 @@ def generateFlashcards(text, number):
 
     def cleanSubject(subject):
         subject = re.sub(r"\s+", " ", subject.strip())
-
         if not subject:
             return subject
 
         firstWord = subject.split(" ", 1)[0]
 
         if firstWord.lower() in ["a", "an", "the"]:
-            return firstWord.lower() + (
-                subject[len(firstWord):]
-                if len(subject) > len(firstWord)
-                else ""
-            )
+            return firstWord.lower() + (subject[len(firstWord):] if len(subject) > len(firstWord) else "")
 
         # Keep acronyms such as DNA uppercase.
         if firstWord.isupper() and len(firstWord) <= 5:
             return subject
 
-        return firstWord.lower() + (
-            subject[len(firstWord):]
-            if len(subject) > len(firstWord)
-            else ""
-        )
+        return firstWord.lower() + (subject[len(firstWord):] if len(subject) > len(firstWord) else "")
 
     for sentence in sentences:
+
         sentence = sentence.strip()
 
         if len(sentence) < 25:
@@ -1060,98 +1198,115 @@ def generateFlashcards(text, number):
         question = None
 
         # Skip headings and pronoun-only openings.
-        if lower.startswith(("their ", "these ", "this ", "it ", "they ")):
+        if lower.startswith((
+            "their ", "these ", "this ", "it ", "they "
+        )):
             continue
 
+        # --------------------------------------------------
         # HIGH-QUALITY PATTERNS FIRST
+        # --------------------------------------------------
 
         if re.match(r"^Every living organism is made of\s+", sentence, re.I):
             question = "What are all living organisms made of"
 
         elif re.match(r"^(.+?)\s+do not have\s+", sentence, re.I):
             m = re.match(r"^(.+?)\s+do not have\s+", sentence, re.I)
-            subject = cleanSubject(m.group(1))
-            question = f"What do {subject} not have"
+            question = f"What do {cleanSubject(m.group(1))} lack"
 
-        elif re.match(r"^(.+?)\s+is composed of\s+", sentence, re.I):
-            m = re.match(r"^(.+?)\s+is composed of\s+", sentence, re.I)
-            subject = cleanSubject(m.group(1))
-            question = f"What is {subject} composed of"
+        elif re.match(r"^(.+?)\s+does not have\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+does not have\s+", sentence, re.I)
+            question = f"What does {cleanSubject(m.group(1))} lack"
 
-        elif re.match(r"^(.+?)\s+consists of\s+", sentence, re.I):
-            m = re.match(r"^(.+?)\s+consists of\s+", sentence, re.I)
-            subject = cleanSubject(m.group(1))
-            question = f"What does {subject} consist of"
+        elif re.match(r"^(.+?)\s+results in\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+results in\s+", sentence, re.I)
+            question = f"What does {cleanSubject(m.group(1))} result in"
 
-        elif re.match(r"^(.+?)\s+are connected processes\.?$", sentence, re.I):
-            m = re.match(r"^(.+?)\s+are connected processes\.?$", sentence, re.I)
-            subject = cleanSubject(m.group(1))
-            question = f"What are {subject}"
+        elif re.match(r"^In humans,\s+(.+?)\s+produces\s+", sentence, re.I):
+            m = re.match(r"^In humans,\s+(.+?)\s+produces\s+", sentence, re.I)
+            question = f"What does {cleanSubject(m.group(1))} produce"
 
-        elif re.match(
-            r"^Mitosis and meiosis have different purposes\.?$",
-            sentence,
-            re.I
-        ):
-            question = "What is different about the purposes of mitosis and meiosis"
+        elif re.match(r"^During (.+?),\s+(.+?)\s+are used to produce\s+(.+)$", sentence, re.I):
+            m = re.match(r"^During (.+?),\s+(.+?)\s+are used to produce\s+(.+)$", sentence, re.I)
+            process = cleanSubject(m.group(1))
+            products = m.group(3).rstrip(".")
+            question = f"What does {process} use to produce {products}"
 
+        elif re.match(r"^(.+?)\s+are made of\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+are made of\s+", sentence, re.I)
+            question = f"What are {cleanSubject(m.group(1))} made of"
+
+        elif re.match(r"^(.+?)\s+is made of\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+is made of\s+", sentence, re.I)
+            question = f"What is {cleanSubject(m.group(1))} made of"
+
+        elif re.match(r"^(.+?)\s+are called\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+are called\s+", sentence, re.I)
+            question = f"What are {cleanSubject(m.group(1))} called"
+
+        elif re.match(r"^(.+?)\s+is called\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+is called\s+", sentence, re.I)
+            question = f"What is {cleanSubject(m.group(1))} called"
+
+        elif re.match(r"^One chromosome in each pair is inherited from\s+", sentence, re.I):
+            question = "From whom are the chromosomes in each pair inherited"
+
+        elif re.match(r"^(.+?)\s+can result from\s+(.+)$", sentence, re.I):
+            m = re.match(r"^(.+?)\s+can result from\s+(.+)$", sentence, re.I)
+            cause = m.group(2).rstrip(".").strip()
+            question = f"What can result from {cause}"
+
+        elif re.match(r"^(.+?)\s+are located in\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+are located in\s+", sentence, re.I)
+            question = f"Where are {cleanSubject(m.group(1))} located"
+
+        elif re.match(r"^(.+?)\s+is located in\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+is located in\s+", sentence, re.I)
+            question = f"Where is {cleanSubject(m.group(1))} located"
+
+        # Definition sentences.
         elif re.match(r"^(.+?)\s+is\s+", sentence, re.I):
             m = re.match(r"^(.+?)\s+is\s+", sentence, re.I)
             subject = cleanSubject(m.group(1))
-
             if len(subject.split()) <= 8:
                 question = f"What is {subject}"
 
-        elif re.match(r"^(.+?)\s+are\s+", sentence, re.I):
-            m = re.match(r"^(.+?)\s+are\s+", sentence, re.I)
-            subject = cleanSubject(m.group(1))
+        elif re.match(r"^(.+?)\s+are\s+connected processes\.?$", sentence, re.I):
+            m = re.match(r"^(.+?)\s+are\s+connected processes\.?$", sentence, re.I)
+            question = f"How are {cleanSubject(m.group(1))} related"
 
-            if len(subject.split()) <= 8:
-                question = f"What are {subject}"
+        # X has Y / X have Y.
+        elif re.match(r"^Mitosis and meiosis have different purposes\.?$", sentence, re.I):
+            question = "What is the difference between mitosis and meiosis"
 
         elif re.match(r"^(.+?)\s+has\s+", sentence, re.I):
             m = re.match(r"^(.+?)\s+has\s+", sentence, re.I)
-            subject = cleanSubject(m.group(1))
-
-            if len(subject.split()) <= 8:
-                question = f"What does {subject} have"
+            question = f"What does {cleanSubject(m.group(1))} have"
 
         elif re.match(r"^(.+?)\s+have\s+", sentence, re.I):
             m = re.match(r"^(.+?)\s+have\s+", sentence, re.I)
-            subject = cleanSubject(m.group(1))
+            question = f"What do {cleanSubject(m.group(1))} have"
 
-            if len(subject.split()) <= 8:
-                question = f"What do {subject} have"
-
+        # X contains Y.
         elif re.match(r"^(.+?)\s+contains\s+", sentence, re.I):
             m = re.match(r"^(.+?)\s+contains\s+", sentence, re.I)
-            subject = cleanSubject(m.group(1))
+            question = f"What does {cleanSubject(m.group(1))} contain"
 
-            if len(subject.split()) <= 8:
-                question = f"What does {subject} contain"
-
+        # X produces / produce Y.
         elif re.match(r"^(.+?)\s+produces\s+", sentence, re.I):
             m = re.match(r"^(.+?)\s+produces\s+", sentence, re.I)
-            subject = cleanSubject(m.group(1))
-
-            if len(subject.split()) <= 8:
-                question = f"What does {subject} produce"
+            question = f"What does {cleanSubject(m.group(1))} produce"
 
         elif re.match(r"^(.+?)\s+produce\s+", sentence, re.I):
             m = re.match(r"^(.+?)\s+produce\s+", sentence, re.I)
-            subject = cleanSubject(m.group(1))
+            question = f"What do {cleanSubject(m.group(1))} produce"
 
-            if len(subject.split()) <= 8:
-                question = f"What do {subject} produce"
+        elif re.match(r"^(.+?)\s+refers to\s+", sentence, re.I):
+            m = re.match(r"^(.+?)\s+refers to\s+", sentence, re.I)
+            question = f"What does {cleanSubject(m.group(1))} refer to"
 
         if question:
-            addFlashcard(
-                cards,
-                question,
-                sentence,
-                seenQuestions,
-                number
-            )
+            addFlashcard(cards, question, sentence, seenQuestions, number)
 
         if len(cards) >= number:
             break
@@ -1304,55 +1459,23 @@ def flashcardResult():
 
     cards[cardIndex]["result"] = result
 
-    # Weak-point cards remember which original card they came from.
-    # Do not change the original saved set until the entire Weak Points
-    # review is finished. This keeps the previous set's counts accurate
-    # while the review is still in progress.
+    # A result on a Weak Points card updates its original card immediately.
+    # This means choosing Got it removes that card from Weak Points at once,
+    # rather than waiting for every other card in the set to be completed.
     selectedCard = cards[cardIndex]
-
     sourceSetId = selectedCard.get("sourceSetId")
     sourceCardIndex = selectedCard.get("sourceCardIndex")
 
-    reviewComplete = True
-
-    if targetSet.get("choice") == "weak":
-        reviewComplete = all(
-            card.get("result") is not None
-            for card in cards
-        )
-
-    if sourceSetId and reviewComplete:
+    if targetSet.get("choice") == "weak" and sourceSetId is not None and isinstance(sourceCardIndex, int):
         for sourceSet in flashcardSets:
-            if sourceSet.get("id") != sourceSetId:
-                continue
+            if sourceSet.get("id") == sourceSetId:
+                sourceCards = sourceSet.get("cards", [])
+                if 0 <= sourceCardIndex < len(sourceCards):
+                    sourceCards[sourceCardIndex]["result"] = result
+                break
 
-            sourceCards = sourceSet.get("cards", [])
-
-            if (
-                isinstance(sourceCardIndex, int)
-                and 0 <= sourceCardIndex < len(sourceCards)
-            ):
-                sourceCards[sourceCardIndex]["result"] = result
-
-    # Keep saved weak-point copies synchronized with their source card
-    # only after the whole weak-point review is complete.
-    if sourceSetId and reviewComplete:
-        for flashcardSet in flashcardSets:
-            for card in flashcardSet.get("cards", []):
-                if (
-                    card.get("sourceSetId") == sourceSetId
-                    and card.get("sourceCardIndex") == sourceCardIndex
-                ):
-                    card["result"] = result
-
-    # Normal flashcard results update Weak Points immediately.
-    # A Weak Points review updates them only after all of its cards
-    # have been answered.
-    if targetSet.get("choice") == "weak":
-        if reviewComplete:
-            rebuildWeakPoints(subjectData)
-    else:
-        rebuildWeakPoints(subjectData)
+    rebuildWeakPoints(subjectData)
+    syncSavedWeakSets(subjectData)
 
     # Keep the older results list updated for compatibility with
     # existing saved data.
@@ -1381,6 +1504,14 @@ def flashcardResult():
             "result": result
         })
 
+    data.setdefault("studyActivity", []).append({
+        "type": "review",
+        "subject": subject,
+        "setId": setId,
+        "question": question,
+        "result": result,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
     saveStudyData(data)
 
     return redirect(
@@ -1390,6 +1521,27 @@ def flashcardResult():
             set_id=setId
         )
     )
+
+
+@app.route("/study-time", methods=["POST"])
+def logStudyTime():
+    payload = request.get_json(silent=True) or {}
+    subject = str(payload.get("subject", ""))
+    setId = str(payload.get("setId", ""))
+    try:
+        seconds = max(0, min(int(payload.get("seconds", 0)), 120))
+    except (TypeError, ValueError):
+        seconds = 0
+    if seconds and subject:
+        data = loadStudyData()
+        if subject in data.get("subjects", {}):
+            data.setdefault("studyActivity", []).append({
+                "type": "time", "subject": subject, "setId": setId,
+                "seconds": seconds,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            })
+            saveStudyData(data)
+    return jsonify({"success": True})
 
 
 # --------------------------------------------------
@@ -1526,9 +1678,30 @@ def progress():
                     "result": card.get("result")
                 })
 
+    activity = data.get("studyActivity", [])
+    subjectActivity = [item for item in activity if selectedSubject and item.get("subject") == selectedSubject]
+    totalCardsReviewed = sum(1 for item in subjectActivity if item.get("type") == "review")
+    totalSeconds = sum(int(item.get("seconds", 0) or 0) for item in subjectActivity if item.get("type") == "time")
+    from datetime import date, timedelta
+    today = date.today()
+    weekLabels = [(today - timedelta(days=offset)).strftime("%a") for offset in range(6, -1, -1)]
+    weekKeys = [(today - timedelta(days=offset)).strftime("%Y-%m-%d") for offset in range(6, -1, -1)]
+    weekCounts = [sum(1 for item in activity if item.get("type") == "review" and item.get("timestamp", "")[:10] == day and (not selectedSubject or item.get("subject") == selectedSubject)) for day in weekKeys]
+    subjectTime = {}
+    for item in activity:
+        if item.get("type") == "time":
+            subjectTime[item.get("subject", "Other")] = subjectTime.get(item.get("subject", "Other"), 0) + int(item.get("seconds", 0) or 0)
+    recentActivity = sorted(subjectActivity, key=lambda item: item.get("timestamp", ""), reverse=True)[:8]
+
     return render_template(
         "progress.html",
         subjects=data["subjects"],
+        totalCardsReviewed=totalCardsReviewed,
+        totalStudyMinutes=round(totalSeconds / 60),
+        weekLabels=weekLabels,
+        weekCounts=weekCounts,
+        subjectTime=subjectTime,
+        recentActivity=recentActivity,
         materials=materials,
         weakPoints=weakPoints,
         selectedSubject=selectedSubject,
