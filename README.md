@@ -44,3 +44,5 @@ Ensure the Qwen model can be downloaded or loaded from the configured local mode
 python app.py
 (You may need to remove protection and run python app.py again)
 Open the local URL printed by Flask in the browser, commonly http://127.0.0.1:5000
+
+**Disclaimer** Users must install Python and the packages listed in requirements.txt using pip install -r requirements.txt. StudySense uses Flask for its web application, PyPDF2 and python-docx for reading study materials, and PyTorch and Hugging Face Transformers to run the local Qwen language model. Users must also ensure the model is available on their computer. The local AI setup does not require an external API key
