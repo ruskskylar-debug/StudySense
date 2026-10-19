@@ -30,3 +30,17 @@ During a study session, the system can generate flashcards and practice question
 
 Future Goal:
 The long-term goal is to create a personalized AI tutor that does more than simply answer questions. The system should understand the student's course materials, track their study progress, identify weaknesses, and continuously adjust their study sessions to help them improve.
+
+How to use:
+git clone https://github.com/ruskskylar-debug/StudySense.git
+cd StudySense
+
+python -m venv .venv
+
+pip install -r requirements.txt
+
+Ensure the Qwen model can be downloaded or loaded from the configured local model location. The first launch may require additional download time and disk space.
+
+python app.py
+(You may need to remove protection and run python app.py again)
+Open the local URL printed by Flask in the browser, commonly http://127.0.0.1:5000
