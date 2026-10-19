@@ -1,457 +1,297 @@
 <!DOCTYPE html>
-
 <html>
-
 <head>
     <title>Flashcards - StudySense</title>
-
-
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='style.css') }}"
->
-
-
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body>
-
 <div class="app">
 
-
 <aside class="sidebar">
-
     <div class="logo">
-
         <h1>StudySense</h1>
-
         <p>Your personal study space</p>
-
     </div>
-
     <nav>
-
-        <a href="/">
-            Home
-        </a>
-
-        <a href="/ask-ai">
-            Ask AI
-        </a>
-
-        <a href="/flashcards" class="active">
-            Flashcards
-        </a>
-
-        <a href="/progress">
-            Progress
-        </a>
-
+        <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-7h6v7"/></svg>Home</a>
+        <a href="/planner"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M7 14h3M7 17h6"/></svg>Study Planner</a>
+        <a href="/ask-ai"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4zM8 8h8M8 12h5"/></svg>Ask AI</a>
+        <a href="/flashcards" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Flashcards</a>
+        <a href="/progress"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18M7 15l4-4 3 2 6-7"/></svg>Progress</a>
     </nav>
-
 </aside>
-
 
 <main class="main-content">
 
     <div class="page-header">
-
         <h2>Flashcards</h2>
-
-        <p>
-            Choose what you want to review and let StudySense
-            create a set of flashcards for you.
-        </p>
-
+        <p>Choose what you want to review and create a study set.</p>
     </div>
 
-
     {% if not cards %}
-
     <section class="upload-card">
-
         <div class="section-header">
-
             <h2>Create Flashcards</h2>
-
-            <p>
-                Choose what you want to study.
-            </p>
-
+            <p>Choose what you want to study.</p>
         </div>
 
-
-        <form
-            action="/flashcards"
-            method="POST"
-        >
+        <form action="/flashcards" method="POST">
 
             <div class="form-group">
-
-                <label for="subject">
-                    Subject
-                </label>
-
-                <select
-                    id="subject"
-                    name="subject"
-                    required
-                >
-
-                    <option value="">
-                        Choose a subject
-                    </option>
-
+                <label for="subject">Subject</label>
+                <select id="subject" name="subject" required onchange="loadSubject(this.value)">
+                    <option value="">Choose a subject</option>
                     {% for subject in subjects %}
-
-                    <option
-                        value="{{ subject }}"
-                        {% if selectedSubject == subject %}
-                        selected
-                        {% endif %}
-                    >
+                    <option value="{{ subject }}" {% if selectedSubject == subject %}selected{% endif %}>
                         {{ subject }}
                     </option>
-
                     {% endfor %}
-
                 </select>
-
             </div>
 
-
-            <div
-                class="option"
-                onclick="document.getElementById('all').checked = true"
-            >
-
-                <input
-                    type="radio"
-                    name="choice"
-                    value="all"
-                    id="all"
-                    checked
-                >
-
+            <div class="option" onclick="selectChoice('all')">
+                <input type="radio" name="choice" value="all" id="all" checked onchange="selectChoice('all')">
                 <label for="all">
-
-                    <strong>
-                        All Material
-                    </strong>
-
-                    <span>
-                        Review everything from this subject.
-                    </span>
-
+                    <strong>All Material</strong>
+                    <span>Review everything from this subject.</span>
                 </label>
-
             </div>
 
-
-            <div
-                class="option"
-                onclick="document.getElementById('topic').checked = true"
-            >
-
-                <input
-                    type="radio"
-                    name="choice"
-                    value="topic"
-                    id="topic"
-                >
-
-                <label for="topic">
-
-                    <strong>
-                        Specific Topic
-                    </strong>
-
-                    <span>
-                        Focus your flashcards on one topic.
-                    </span>
-
+            <div class="option" onclick="selectChoice('topic')">
+                <input type="radio" name="choice" value="topic" id="topicChoice" onchange="selectChoice('topic')">
+                <label for="topicChoice">
+                    <strong>Specific Topic</strong>
+                    <span>Focus your flashcards on one topic.</span>
                 </label>
-
             </div>
 
-
-            <div class="topic-input">
-
-                <input
-                    type="text"
-                    name="topic"
-                    placeholder="Enter topic"
-                >
-
-            </div>
-
-
-            <div
-                class="option"
-                onclick="document.getElementById('weak').checked = true"
-            >
-
-                <input
-                    type="radio"
-                    name="choice"
-                    value="weak"
-                    id="weak"
-                >
-
-                <label for="weak">
-
-                    <strong>
-                        Weak Points
-                    </strong>
-
-                    <span>
-                        Focus on areas that need more practice.
-                    </span>
-
-                </label>
-
-            </div>
-
-
-            <div
-                class="option"
-                onclick="document.getElementById('random').checked = true"
-            >
-
-                <input
-                    type="radio"
-                    name="choice"
-                    value="random"
-                    id="random"
-                >
-
-                <label for="random">
-
-                    <strong>
-                        Random Review
-                    </strong>
-
-                    <span>
-                        Let StudySense choose what to review.
-                    </span>
-
-                </label>
-
-            </div>
-
-
-            <div class="number-box">
-
-                <label for="number">
-                    Number of flashcards
-                </label>
-
-                <select id="number" name="number">
-
-                    <option value="5">
-                        5
+            <div class="topic-input" id="topicBox" style="display: none;">
+                <label for="topic">Area of focus</label>
+                <select id="topic" name="topic">
+                    <option value="">Choose a topic</option>
+                    {% for topicOption in topics %}
+                    <option value="{{ topicOption }}" {% if request.args.get("topic") == topicOption %}selected{% endif %}>
+                        {{ topicOption }}
                     </option>
-
-                    <option value="10" selected>
-                        10
-                    </option>
-
-                    <option value="15">
-                        15
-                    </option>
-
-                    <option value="20">
-                        20
-                    </option>
-
-
+                    {% endfor %}
                 </select>
-
             </div>
 
+            <div class="number-box" id="numberBox">
+                <label for="number">Number of flashcards</label>
+                <select id="number" name="number">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                </select>
+            </div>
 
-            <button
-                type="submit"
-                class="primary-button"
-            >
+            <button type="submit" class="primary-button">
                 Create Flashcards
             </button>
 
         </form>
-
     </section>
-
     {% endif %}
-
 
     {% if selectedSubject %}
-
     <div class="selected-subject">
-
-        <strong>
-            Studying:
-        </strong>
-
-        {{ selectedSubject }}
-
+        <strong>Studying:</strong> {{ selectedSubject }}
     </div>
-
     {% endif %}
-
 
     {% if error %}
-
-    <div class="error-box">
-
-        {{ error }}
-
-    </div>
-
+    <div class="error-box">{{ error }}</div>
     {% endif %}
-
 
     {% if cards %}
 
     <div class="flashcard-header">
-
         <div>
-
-            <h2>
-                {{ selectedSubject }} Review
-            </h2>
-
-            <p>
-                Click a card to reveal the answer.
-            </p>
-
+            <h2>{{ activeSet.title }}</h2>
+            <p>Click a card to reveal the answer.</p>
         </div>
 
-
-        <a
-            href="/flashcards?subject={{ selectedSubject }}"
-            class="button secondary-button"
-        >
-            New Set
-        </a>
-
+        <div class="flashcard-actions">
+            <button type="button" class="button shuffle-button" onclick="shuffleCards()">Shuffle cards</button>
+            <a href="/flashcards?subject={{ selectedSubject }}" class="button secondary-button">
+                New Set
+            </a>
+            <a href="/progress?subject={{ selectedSubject }}" class="button secondary-button">
+                Progress
+            </a>
+        </div>
     </div>
 
+    {% if activeSet and activeSet.sourceMaterials %}
+    <div class="source-note"><strong>Made from:</strong> {{ activeSet.sourceMaterials|join(', ') }}</div>
+    {% elif activeSet and activeSet.choice == 'weak' %}
+    <div class="source-note"><strong>Source:</strong> Cards marked Almost or Need help in your saved sets.</div>
+    {% endif %}
 
-    <div class="flashcard-grid">
+    <div class="flashcard-grid" id="flashcardGrid">
 
         {% for card in cards %}
-
         <div class="study-card-container">
 
-            <div
-                class="study-card"
-                onclick="flipCard(this)"
-            >
-
+            <div class="study-card {% if card.result %}has-result{% endif %}" onclick="flipCard(this)">
                 <div class="card-front">
-
-                    <span class="card-label">
-                        QUESTION
-                    </span>
-
-                    <h3>
-                        {{ card.question }}
-                    </h3>
-
-                    <p class="flip-hint">
-                        Click to reveal answer
-                    </p>
-
+                    <span class="card-label">QUESTION</span>
+                    <h3>{{ card.question }}</h3>
+                    <p class="flip-hint">Click to reveal answer</p>
                 </div>
-
 
                 <div class="card-back">
-
-                    <span class="card-label">
-                        ANSWER
-                    </span>
-
-                    <p>
-                        {{ card.answer }}
-                    </p>
-
+                    <span class="card-label">ANSWER</span>
+                    <p>{{ card.answer }}</p>
                 </div>
-
             </div>
 
-
             <div class="card-result">
+                <form action="/flashcard-result" method="POST" onsubmit="saveFlashcardResult(event, this)">
+                    <input type="hidden" name="subject" value="{{ selectedSubject }}">
+                    <input type="hidden" name="setId" value="{{ activeSet.id }}">
+                    <input type="hidden" name="cardIndex" value="{{ loop.index0 }}">
 
-                <form
-                    action="/flashcard-result"
-                    method="POST"
-                >
-
-                    <input
-                        type="hidden"
-                        name="subject"
-                        value="{{ selectedSubject }}"
-                    >
-
-                    <input
-                        type="hidden"
-                        name="question"
-                        value="{{ card.question }}"
-                    >
-
-                    <button
-                        type="submit"
-                        name="result"
-                        value="gotIt"
-                        class="result-button got-it"
-                    >
+                    <button type="submit" name="result" value="gotIt"
+                        class="result-button got-it">
                         Got it
                     </button>
 
-                    <button
-                        type="submit"
-                        name="result"
-                        value="almost"
-                        class="result-button almost"
-                    >
+                    <button type="submit" name="result" value="almost"
+                        class="result-button almost">
                         Almost
                     </button>
 
-                    <button
-                        type="submit"
-                        name="result"
-                        value="needHelp"
-                        class="result-button need-help"
-                    >
+                    <button type="submit" name="result" value="needHelp"
+                        class="result-button need-help">
                         Need help
                     </button>
-
                 </form>
-
             </div>
 
         </div>
-
         {% endfor %}
 
     </div>
 
+    {% endif %}
 
     <script>
+        function shuffleCards() {
+            const grid = document.getElementById("flashcardGrid");
+            if (!grid) return;
+            const cards = Array.from(grid.children);
+            for (let i = cards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [cards[i], cards[j]] = [cards[j], cards[i]];
+            }
+            cards.forEach(card => grid.appendChild(card));
+        }
+
+        // Track active study time in small, bounded intervals. Only time spent
+        // with this flashcard page open is recorded; time is not backfilled.
+        {% if cards and activeSet %}
+        (function() {
+            const subject = {{ selectedSubject|tojson }};
+            const setId = {{ activeSet.id|tojson }};
+            let lastTick = Date.now();
+            let unsentSeconds = 0;
+            function recordTime(finalFlush) {
+                const now = Date.now();
+                const elapsed = Math.max(0, Math.min(60, Math.floor((now - lastTick) / 1000)));
+                lastTick = now;
+                unsentSeconds += elapsed;
+                if (unsentSeconds >= 20 || (finalFlush && unsentSeconds > 0)) {
+                    const seconds = Math.min(120, unsentSeconds);
+                    unsentSeconds = 0;
+                    const body = JSON.stringify({subject: subject, setId: setId, seconds: seconds});
+                    if (finalFlush && navigator.sendBeacon) {
+                        navigator.sendBeacon('/study-time', new Blob([body], {type: 'application/json'}));
+                    } else {
+                        fetch('/study-time', {method:'POST', headers:{'Content-Type':'application/json'}, body:body, keepalive:!!finalFlush}).catch(function(){});
+                    }
+                }
+            }
+            setInterval(function(){recordTime(false);}, 20000);
+            document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') recordTime(true); else lastTick = Date.now(); });
+            window.addEventListener('pagehide', function(){recordTime(true);});
+        })();
+        {% endif %}
 
         function flipCard(card) {
             card.classList.toggle("flipped");
         }
 
+        function loadSubject(subject) {
+            if (!subject) {
+                window.location.href = "/flashcards";
+                return;
+            }
+
+            window.location.href =
+                "/flashcards?subject=" + encodeURIComponent(subject);
+        }
+
+        function selectChoice(choice) {
+            const radio = document.getElementById(
+                choice === "topic" ? "topicChoice" : choice
+            );
+
+            if (radio) {
+                radio.checked = true;
+            }
+
+            const topicBox = document.getElementById("topicBox");
+
+            if (topicBox) {
+                topicBox.style.display = choice === "topic" ? "block" : "none";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            selectChoice("all");
+        });
+
+        function saveFlashcardResult(event, form) {
+            event.preventDefault();
+
+            const clickedButton = event.submitter;
+
+            if (!clickedButton) {
+                return;
+            }
+
+            const buttons = form.querySelectorAll(".result-button");
+
+            buttons.forEach(function(button) {
+                button.classList.remove("selected");
+            });
+
+            clickedButton.classList.add("selected");
+
+            const formData = new FormData(form);
+            formData.set("result", clickedButton.value);
+
+            fetch("/flashcard-result", {
+                method: "POST",
+                headers: {
+                    "X-Requested-With": "fetch"
+                },
+                body: formData
+            }).then(function(response) {
+                if (!response.ok) {
+                    throw new Error("Could not save result.");
+                }
+            }).catch(function(error) {
+                clickedButton.classList.remove("selected");
+                console.log(error);
+            });
+        }
     </script>
 
-    {% endif %}
-
 </main>
-
-
 </div>
-
 </body>
-
 </html>
