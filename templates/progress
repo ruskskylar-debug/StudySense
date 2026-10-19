@@ -30,23 +30,11 @@
     </div>
 
     <nav>
-
-        <a href="/">
-            Home
-        </a>
-
-        <a href="/ask-ai">
-            Ask AI
-        </a>
-
-        <a href="/flashcards">
-            Flashcards
-        </a>
-
-        <a href="/progress" class="active">
-            Progress
-        </a>
-
+        <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-7h6v7"/></svg>Home</a>
+        <a href="/planner"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M7 14h3M7 17h6"/></svg>Study Planner</a>
+        <a href="/ask-ai"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H9l-5 4zM8 8h8M8 12h5"/></svg>Ask AI</a>
+        <a href="/flashcards"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>Flashcards</a>
+        <a href="/progress" class="active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18M7 15l4-4 3 2 6-7"/></svg>Progress</a>
     </nav>
 
 </aside>
@@ -124,6 +112,60 @@
 
     </section>
 
+
+    <section class="study-dashboard" style="margin-top:20px">
+        <div class="study-dashboard-card">
+            <span class="dashboard-eyebrow">Your study stats</span>
+            <div class="dashboard-metrics" style="margin-top:14px">
+                <div class="metric-tile"><strong>{{ totalCardsReviewed }}</strong><span>Cards reviewed</span></div>
+                <div class="metric-tile"><strong>{{ totalStudyMinutes }} min</strong><span>Study time tracked</span></div>
+            </div>
+        </div>
+        <div class="study-dashboard-card">
+            <span class="dashboard-eyebrow">A little at a time</span>
+            <h2 style="color:#70429a;margin:12px 0 6px">Keep your streak going</h2>
+            <p style="color:#817487;margin:0">Every review session helps you see what is sticking and what deserves another look.</p>
+        </div>
+    </section>
+
+    <section class="dashboard-panel">
+        <h2>Cards reviewed this week</h2>
+        <div class="weekly-chart">
+            {% for day in weekLabels %}
+            <div class="chart-day">
+                {% set maxCount = weekCounts|max %}
+                <div class="chart-bar" title="{{ weekCounts[loop.index0] }} cards" style="height:{{ (weekCounts[loop.index0] / (maxCount if maxCount > 0 else 1) * 100)|int }}%"></div>
+                <span>{{ day }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="empty" style="margin-bottom:0">This graph records review actions from v17 onward.</p>
+    </section>
+
+    <section class="dashboard-panel">
+        <h2>Study time by subject</h2>
+        {% if subjectTime %}
+        <div class="continue-list">
+            {% for subjectName, seconds in subjectTime.items()|sort(attribute='0') %}
+            <div class="continue-item"><span><strong>{{ subjectName }}</strong><small>{{ (seconds / 60)|round|int }} minutes tracked</small></span><span class="continue-arrow">✦</span></div>
+            {% endfor %}
+        </div>
+        {% else %}<p class="empty">Study time will appear after you study with a flashcard set open.</p>{% endif %}
+    </section>
+
+    <section class="dashboard-panel">
+        <h2>Recent activity</h2>
+        {% if recentActivity %}
+        <div class="activity-list">
+            {% for item in recentActivity %}
+            <div class="activity-row"><span class="activity-dot"></span><div>
+                {% if item.type == 'review' %}<strong>Reviewed a card · {{ item.result }}</strong>{% else %}<strong>Studied for {{ (item.seconds / 60)|round|int }} min</strong>{% endif %}
+                <small>{{ item.subject }} · {{ item.timestamp }}</small>
+            </div></div>
+            {% endfor %}
+        </div>
+        {% else %}<p class="empty">New study activity will appear here.</p>{% endif %}
+    </section>
 
     <section class="progress-section">
 
@@ -205,62 +247,90 @@
 
     <section class="weak-section">
 
-        <h2>
-            Weak Points
-        </h2>
+        <h2>Weak Points</h2>
 
         <p>
-
-            These are areas that may need more practice
-            in {{ selectedSubject }}.
-
+            These are cards you marked Almost or Need help. You can review all of them together.
         </p>
-
 
         {% if weakPoints %}
 
-            {% for point in weakPoints %}
-
-            <div class="weak-point">
-
-                <span>
-                    {{ point }}
-                </span>
-
-
-                <form
-                    action="/remove-weak-point"
-                    method="POST"
-                >
-
-                    <input
-                        type="hidden"
-                        name="subject"
-                        value="{{ selectedSubject }}"
-                    >
-
-                    <input
-                        type="hidden"
-                        name="weakPoint"
-                        value="{{ point }}"
-                    >
-
-                    <button type="submit">
-                        Remove
-                    </button>
-
-                </form>
-
+            <div class="weak-point-list">
+                {% for point in weakPoints %}
+                <div class="weak-point">
+                    <span>{{ point }}</span>
+                </div>
+                {% endfor %}
             </div>
 
-            {% endfor %}
+            <form action="/flashcards" method="POST" class="weak-review-form">
+                <input type="hidden" name="subject" value="{{ selectedSubject }}">
+                <input type="hidden" name="choice" value="weak">
+                <button type="submit" class="primary-button">
+                    Review Weak Points
+                </button>
+            </form>
 
         {% else %}
-
             <p class="empty">
                 No weak points have been identified yet.
             </p>
+        {% endif %}
 
+    </section>
+
+
+    <section class="saved-sets-section">
+
+        <h2>Saved Flashcard Sets</h2>
+
+        <p>
+            Your previous sets stay here so you can return to the same cards later.
+        </p>
+
+        {% if flashcardSets %}
+
+            <div class="saved-set-list">
+
+                {% for flashcardSet in flashcardSets|reverse %}
+
+                <div class="saved-set-card">
+                    <a
+                        href="/flashcards?subject={{ selectedSubject }}&set_id={{ flashcardSet.id }}"
+                        class="saved-set-link"
+                    >
+                        <div>
+                            <h3>{{ flashcardSet.title }}</h3>
+                            <p>
+                                {{ flashcardSet.cards|length }} cards
+                                {% if flashcardSet.createdAt %}
+                                · {{ flashcardSet.createdAt }}
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div class="saved-set-results">
+                            <span>Got it: {{ flashcardSet.gotItCount }}</span>
+                            <span>Almost: {{ flashcardSet.almostCount }}</span>
+                            <span>Need help: {{ flashcardSet.needHelpCount }}</span>
+                        </div>
+                    </a>
+
+                    <form action="/delete-flashcard-set" method="POST" onsubmit="return confirm('Delete this flashcard set?');">
+                        <input type="hidden" name="subject" value="{{ selectedSubject }}">
+                        <input type="hidden" name="setId" value="{{ flashcardSet.id }}">
+                        <button type="submit" class="delete-button">Delete</button>
+                    </form>
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+            <p class="empty">
+                No flashcard sets have been created yet.
+            </p>
         {% endif %}
 
     </section>
@@ -268,24 +338,17 @@
 
     <section class="weak-study">
 
-        <h2>
-            Want to work on your weak points?
-        </h2>
+        <h2>Study More</h2>
 
         <p>
-            You decide what you want to study.
-            Weak points are only recommendations.
+            Create a new flashcard set whenever you want to review your material.
         </p>
 
-        <a
-            href="/flashcards?subject={{ selectedSubject }}"
-            class="button"
-        >
+        <a href="/flashcards?subject={{ selectedSubject }}" class="button">
             Make Flashcards
         </a>
 
     </section>
-
 
     <section>
 
