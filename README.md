@@ -4,14 +4,14 @@ AI-powered study system to help students study using their own course materials.
 Students will be able to upload notes, PDFs, lecture materials and other study documents. The AI will use the materials to answer questions and create study materials including flashcards.
 
 Main features:
-upload course notes and files
-ask the AI questions about the materials
-generate flashcards
-generate practice questions
-complete personalized study sessions
-save previous study sessions
-track areas they are struggling
-receive study recommendations based on performance
+Upload course notes, PDFs, DOCX files, and text notes.
+Ask AI questions about their study materials.
+Generate AI-assisted flashcards.
+Generate practice questions (in development).
+Save previous study sessions.
+Track weak areas and study progress.
+Receive personalized study recommendations based on performance.
+Use a built-in study planner with notes, tasks, and a calendar.
 
 Data:
 The prototype uses Ai generated Biology and Psychology documents as sample data to allow the data processing and AI portions of the project to be tested before using actual student uploaded materials. Python and Qwen will be used to create flashcards and answer questions the student may have.
