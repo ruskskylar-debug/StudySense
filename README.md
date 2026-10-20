@@ -4,10 +4,9 @@ AI-powered study system to help students study using their own course materials.
 Students will be able to upload notes, PDFs, lecture materials and other study documents. The AI will use the materials to answer questions and create study materials including flashcards.
 
 Main features:
-Upload course notes, PDFs, DOCX files, and text notes.
-Ask AI questions about their study materials.
+Upload course notes, PDFs, DOCX files, and text.
+Ask the AI questions about their study materials.
 Generate AI-assisted flashcards.
-Generate practice questions (in development).
 Save previous study sessions.
 Track weak areas and study progress.
 Receive personalized study recommendations based on performance.
