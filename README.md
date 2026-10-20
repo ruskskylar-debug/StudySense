@@ -37,6 +37,14 @@ cd StudySense
 
 python -m venv .venv
 
+Activate Environment:
+
+Windows: .venv\Scripts\activate
+
+macOS:
+
+source .venv/bin/activate
+
 pip install -r requirements.txt
 
 Ensure the Qwen model can be downloaded or loaded from the configured local model location. The first launch may require additional download time and disk space.
