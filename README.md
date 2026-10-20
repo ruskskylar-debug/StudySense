@@ -14,7 +14,7 @@ track areas they are struggling
 receive study recommendations based on performance
 
 Data:
-The prototype uses Ai generated Biology and Psychology documents as sample data to allow the data processing and AI portions of the project to be tested before using actual student uploaded materials. Python and Owen will be used to create flashcards and answer questions the student may have.
+The prototype uses Ai generated Biology and Psychology documents as sample data to allow the data processing and AI portions of the project to be tested before using actual student uploaded materials. Python and Qwen will be used to create flashcards and answer questions the student may have.
 
 Data Cleaning:
 
