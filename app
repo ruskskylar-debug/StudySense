@@ -7,6 +7,9 @@ import uuid
 from datetime import datetime
 
 from src.dataInput import readFile, cleanText
+from src.dataStorage import loadStudyData, saveStudyData
+from src.aiAnswers import generateAnswer
+from werkzeug.utils import secure_filename
 
 
 app = Flask(__name__)
@@ -14,7 +17,6 @@ app.secret_key = "studysense-secret-key"
 
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_FILE = os.path.join(APP_DIR, "data", "studyData.json")
 
 
 # --------------------------------------------------
@@ -56,57 +58,6 @@ except Exception as error:
 # DATA FUNCTIONS
 # --------------------------------------------------
 
-def loadStudyData():
-
-    if not os.path.exists(DATA_FILE):
-        return {
-            "subjects": {}
-        }
-
-    with open(
-        DATA_FILE,
-        "r",
-        encoding="utf-8"
-    ) as file:
-
-        data = json.load(file)
-
-    # Make sure every subject has the fields used by the current
-    # flashcard/progress system, including older studyData.json files.
-    for subjectData in data.get("subjects", {}).values():
-        subjectData.setdefault("flashcardSets", [])
-        subjectData.setdefault("flashcardResults", [])
-        subjectData.setdefault("weakPoints", [])
-        subjectData.setdefault("studyActivity", [])
-        subjectData.setdefault("studyTimeSeconds", 0)
-
-    data.setdefault("studyActivity", [])
-    data.setdefault("planner", {"notes": "", "tasks": [], "events": [], "weeklyGoalMinutes": 240})
-    data["planner"].setdefault("notes", "")
-    data["planner"].setdefault("tasks", [])
-    data["planner"].setdefault("events", [])
-    data["planner"].setdefault("weeklyGoalMinutes", 240)
-    return data
-
-
-def saveStudyData(data):
-
-    os.makedirs(
-        os.path.dirname(DATA_FILE),
-        exist_ok=True
-    )
-
-    with open(
-        DATA_FILE,
-        "w",
-        encoding="utf-8"
-    ) as file:
-
-        json.dump(
-            data,
-            file,
-            indent=4
-        )
 
 
 
@@ -327,23 +278,40 @@ def upload():
             exist_ok=True
         )
 
-        fileName = uploadedFile.filename
+        originalFileName = secure_filename(uploadedFile.filename or "")
+        allowedExtensions = {".txt", ".pdf", ".docx"}
+        fileExtension = os.path.splitext(originalFileName)[1].lower()
 
+        if not originalFileName or fileExtension not in allowedExtensions:
+            return "Unsupported file type. Please upload a TXT, PDF, or DOCX file.", 400
+
+        # Unique storage names prevent collisions and path traversal from user filenames.
+        storedFileName = f"{uuid.uuid4().hex}_{originalFileName}"
         filePath = os.path.join(
             APP_DIR, "data", "raw",
-            fileName
+            storedFileName
         )
 
-        uploadedFile.save(
-            filePath
-        )
+        uploadedFile.save(filePath)
 
-        text = readFile(
-            filePath
-        )
+        try:
+            text = readFile(filePath)
+        except Exception:
+            try:
+                os.remove(filePath)
+            except OSError:
+                pass
+            return "Unable to read this file. Please check that it is a valid TXT, PDF, or DOCX file.", 400
 
-        if text == "":
-            return "Unable to read this file."
+        if not text or text.strip() == "":
+            try:
+                os.remove(filePath)
+            except OSError:
+                pass
+            return "Unable to read this file. Please check that it contains readable text.", 400
+
+        # Keep the original safe display name in study data, not the unique disk name.
+        fileName = originalFileName
 
         cleanedText = cleanText(
             text
@@ -355,10 +323,7 @@ def upload():
         )
 
         cleanedFileName = (
-            fileName.rsplit(
-                ".",
-                1
-            )[0]
+            storedFileName.rsplit(".", 1)[0]
             + "_cleaned.txt"
         )
 
@@ -546,9 +511,15 @@ def answerQuestion():
         subject
     )
 
+    relevantMaterial = findRelevantMaterial(
+        materialText,
+        question
+    )
+
     answer = generateAnswer(
         question,
-        materialText
+        relevantMaterial,
+        llm
     )
 
     materials = []
@@ -1318,81 +1289,6 @@ def generateFlashcards(text, number):
 # --------------------------------------------------
 
 
-def generateAnswer(question, material):
-    try:
-        prompt = f"""
-You are the StudySense AI Assistant.
-
-Use the study material provided below to answer the student's question.
-
-Study Material:
-{material}
-
-Student Question:
-{question}
-
-Instructions:
-- Answer only the question that was asked.
-- Keep the answer short and focused.
-- Use 1 to 3 sentences.
-- Do not add unrelated information.
-- Do not make up information that is not supported by the study material.
-
-Answer:
-"""
-
-        result = llm(
-            prompt,
-            max_new_tokens=100,
-            do_sample=False
-        )
-
-        answer = result[0]["generated_text"]
-
-        if "Answer:" in answer:
-            answer = answer.split(
-                "Answer:",
-                1
-            )[1].strip()
-
-        sentences = re.split(
-            r"(?<=[.!?])\s+",
-            answer
-        )
-
-        if (
-            len(sentences) > 1
-            and not re.search(r"[.!?]$", sentences[-1])
-        ):
-            sentences = sentences[:-1]
-
-        answer = " ".join(
-            sentences
-        ).strip()
-
-        # Qwen sometimes gives a useful answer and then adds the fallback
-        # message even when the information was found. Remove that extra
-        # message when an actual answer came before it.
-        fallback = "I cannot find that information in the study material."
-
-        if fallback in answer:
-            answerBeforeFallback = answer.split(
-                fallback,
-                1
-            )[0].strip()
-
-            if answerBeforeFallback:
-                answer = answerBeforeFallback
-            else:
-                answer = fallback
-
-        return answer
-
-    except Exception as error:
-        return (
-            "StudySense could not generate an answer.\n\n"
-            + str(error)
-        )
 
 
 # --------------------------------------------------
