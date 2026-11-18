@@ -516,11 +516,18 @@ def answerQuestion():
         question
     )
 
-    answer = generateAnswer(
-        question,
-        relevantMaterial,
-        llm
-    )
+    if not relevantMaterial.strip():
+        answer = (
+            "I couldn't find enough relevant information in your uploaded "
+            "study materials to answer that question. Try rewording your "
+            "question or uploading additional notes."
+        )
+    else:
+        answer = generateAnswer(
+            question,
+            relevantMaterial,
+            llm
+        )
 
     materials = []
 
@@ -530,14 +537,60 @@ def answerQuestion():
             subject
         ]["materials"]
 
+    answerId = str(uuid.uuid4())
+
     return render_template(
         "askAI.html",
         subjects=data["subjects"],
         materials=materials,
         selectedSubject=subject,
         question=question,
-        answer=answer
+        answer=answer,
+        answerId=answerId
     )
+
+
+@app.route("/ai-feedback", methods=["POST"])
+def saveAIFeedback():
+
+    payload = request.get_json(silent=True) or {}
+    rating = str(payload.get("rating", "")).strip()
+    allowedRatings = {"helpful", "partially_helpful", "not_helpful"}
+
+    if rating not in allowedRatings:
+        return jsonify({"success": False, "message": "Please choose a feedback option."}), 400
+
+    answerId = str(payload.get("answerId", "")).strip()[:80]
+    subject = str(payload.get("subject", "")).strip()[:150]
+    question = str(payload.get("question", "")).strip()[:3000]
+    answer = str(payload.get("answer", "")).strip()[:12000]
+    comment = str(payload.get("comment", "")).strip()[:2000]
+
+    if not answerId or not subject or not question or not answer:
+        return jsonify({"success": False, "message": "The answer details are missing. Please ask your question again."}), 400
+
+    data = loadStudyData()
+    feedbackEntries = data.setdefault("aiFeedback", [])
+
+    # One response per displayed answer; a later selection updates that entry.
+    existing = next((item for item in feedbackEntries if item.get("answerId") == answerId), None)
+    feedback = {
+        "answerId": answerId,
+        "subject": subject,
+        "question": question,
+        "answer": answer,
+        "rating": rating,
+        "comment": comment,
+        "timestamp": datetime.now().isoformat(timespec="seconds")
+    }
+
+    if existing is None:
+        feedbackEntries.append(feedback)
+    else:
+        existing.update(feedback)
+
+    saveStudyData(data)
+    return jsonify({"success": True, "message": "Thank you! Your feedback has been saved."})
 
 
 def findRelevantMaterial(text, question, maxCharacters=3500):
@@ -550,7 +603,7 @@ def findRelevantMaterial(text, question, maxCharacters=3500):
             sections.append(paragraph)
 
     if not sections:
-        return text[:maxCharacters]
+        return ""
 
     questionWords = set(re.findall(r"\b[a-zA-Z]{3,}\b", question.lower()))
     scoredSections = []
@@ -562,6 +615,11 @@ def findRelevantMaterial(text, question, maxCharacters=3500):
 
     scoredSections.sort(key=lambda item: item[0], reverse=True)
 
+    # Do not send unrelated notes to the model when no paragraph
+    # shares meaningful terms with the student's question.
+    if not scoredSections or scoredSections[0][0] == 0:
+        return ""
+
     relevantText = ""
 
     for score, section in scoredSections:
@@ -570,9 +628,6 @@ def findRelevantMaterial(text, question, maxCharacters=3500):
         if len(relevantText) + len(section) > maxCharacters:
             break
         relevantText += section + "\n\n"
-
-    if relevantText.strip() == "":
-        relevantText = text[:maxCharacters]
 
     return relevantText[:maxCharacters]
 
@@ -1317,17 +1372,19 @@ def flashcardResult():
         "result"
     )
 
+    isAjaxRequest = request.headers.get("X-Requested-With") == "fetch"
+
     if result not in [
         "gotIt",
         "almost",
         "needHelp"
     ]:
-        return jsonify({"success": False})
+        return (jsonify({"success": False, "message": "Invalid review result."}), 400) if isAjaxRequest else redirect(url_for("progress", subject=subject))
 
     data = loadStudyData()
 
     if subject not in data["subjects"]:
-        return jsonify({"success": False})
+        return (jsonify({"success": False, "message": "Subject not found."}), 404) if isAjaxRequest else redirect(url_for("progress"))
 
     subjectData = data["subjects"][subject]
     subjectData.setdefault("flashcardSets", [])
@@ -1341,17 +1398,17 @@ def flashcardResult():
             break
 
     if targetSet is None:
-        return jsonify({"success": False})
+        return (jsonify({"success": False, "message": "Flashcard set not found."}), 404) if isAjaxRequest else redirect(url_for("progress", subject=subject))
 
     try:
         cardIndex = int(cardIndex)
     except (TypeError, ValueError):
-        return jsonify({"success": False})
+        return (jsonify({"success": False, "message": "Invalid flashcard."}), 400) if isAjaxRequest else redirect(url_for("flashcards", subject=subject, set_id=setId))
 
     cards = targetSet.get("cards", [])
 
     if cardIndex < 0 or cardIndex >= len(cards):
-        return jsonify({"success": False})
+        return (jsonify({"success": False, "message": "Flashcard not found."}), 404) if isAjaxRequest else redirect(url_for("flashcards", subject=subject, set_id=setId))
 
     cards[cardIndex]["result"] = result
 
@@ -1409,6 +1466,13 @@ def flashcardResult():
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
     saveStudyData(data)
+
+    if isAjaxRequest:
+        return jsonify({
+            "success": True,
+            "result": result,
+            "question": question
+        })
 
     return redirect(
         url_for(
