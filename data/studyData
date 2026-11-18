@@ -11,11 +11,664 @@
                     "topic": "General",
                     "fileName": "DocxEx1.docx",
                     "text": "Cells are the basic units of life. All living organisms are made of one or more cells. There are two main types of cells: prokaryotic and eukaryotic cells. Prokaryotic cells, such as bacteria, do not have a nucleus. Eukaryotic cells have a nucleus that contains the cell's genetic material. Eukaryotic cells are found in organisms such as plants, animals, fungi, and protists.\nCells contain different organelles that perform specific jobs. The nucleus stores DNA and controls many of the cell's activities. Mitochondria produce energy for the cell through cellular respiration. Ribosomes make proteins, while the cell membrane controls what enters and leaves the cell. Plant cells also contain chloroplasts, which allow plants to perform photosynthesis. During photosynthesis, plants use sunlight, water, and carbon dioxide to produce glucose and oxygen."
+                },
+                {
+                    "topic": "General",
+                    "fileName": "Biology_Study_Material_Long.docx",
+                    "text": "Biology Study Material: Cells, Genetics, and Human Biology\nCell Biology\nCells are the basic structural and functional units of living organisms. Every living organism is made of one or more cells. Cells carry out essential processes such as obtaining energy, transporting materials, responding to their environment, growing, and reproducing. Although cells can differ greatly in size and function, they share several basic structures.\nThe two major categories of cells are prokaryotic cells and eukaryotic cells. Prokaryotic cells do not have a membrane-bound nucleus. Their genetic material is located in a region of the cell called the nucleoid. Bacteria are examples of organisms made of prokaryotic cells. Eukaryotic cells have a membrane-bound nucleus that contains most of the cell's DNA. Animals, plants, fungi, and protists are made of eukaryotic cells.\nThe cell membrane surrounds the cell and controls what enters and leaves it. It helps maintain a stable internal environment. The cytoplasm is the area inside the cell where many chemical reactions occur. Ribosomes are structures that help cells make proteins. In eukaryotic cells, the nucleus stores DNA and helps control cell activities.\nPlant cells contain several structures that are not found in typical animal cells. A cell wall provides additional support and protection outside the cell membrane. Chloroplasts allow plant cells to carry out photosynthesis. Plant cells also usually contain a large central vacuole that stores water and other substances. Animal cells do not have cell walls or chloroplasts.\nCellular Energy and Photosynthesis\nCells need energy to perform their activities. One important molecule used by cells to store and transfer usable energy is ATP, or adenosine triphosphate. Cellular respiration is a series of chemical reactions that allows cells to obtain usable energy from food molecules. In eukaryotic cells, most stages of cellular respiration occur in the mitochondria.\nPhotosynthesis is the process by which plants, algae, and some bacteria use light energy to produce chemical energy. In plants, photosynthesis occurs mainly in chloroplasts. During photosynthesis, carbon dioxide and water are used to produce glucose and oxygen. Light energy is captured by pigments such as chlorophyll.\nCellular respiration and photosynthesis are connected processes. Photosynthesis stores energy in glucose, while cellular respiration releases usable energy from glucose. The products of one process can serve as materials for the other process.\nDNA and Genetics\nDNA stands for deoxyribonucleic acid. DNA is the molecule that contains genetic instructions used by living organisms. The instructions in DNA help cells make proteins and other molecules needed for life. DNA is organized into structures called chromosomes.\nA gene is a section of DNA that contains information related to a particular function or trait. Different versions of a gene are called alleles. An organism receives genetic material from its biological parents. The combination of inherited alleles can influence traits such as certain physical characteristics.\nIn humans, most body cells contain 46 chromosomes arranged in 23 pairs. One chromosome in each pair is inherited from the mother and the other is inherited from the father. Sex cells, such as sperm and eggs, normally contain 23 chromosomes rather than 46.\nDNA must be copied when cells divide. DNA replication produces a copy of the genetic information so that new cells can receive DNA. The sequence of bases in DNA provides information that cells use when producing proteins.\nCell Division\nCells reproduce through processes of cell division. Mitosis is a type of cell division that produces two genetically similar daughter cells. Mitosis is important for growth, tissue repair, and replacing damaged or old cells. Before mitosis begins, the cell copies its DNA so that each daughter cell can receive a complete set of genetic information.\nMeiosis is a different type of cell division used to produce sex cells. Meiosis results in cells that have half the normal number of chromosomes. In humans, meiosis produces cells with 23 chromosomes. Genetic variation can result from the way chromosomes are distributed during meiosis and from the exchange of genetic material between chromosomes.\nMitosis and meiosis have different purposes. Mitosis generally produces two cells with the same chromosome number as the original cell, while meiosis produces cells with half the chromosome number. Mitosis is associated with growth and repair, while meiosis is associated with sexual reproduction.\nCellular Transport\nCells must move materials across the cell membrane to maintain proper conditions. Diffusion is the movement of particles from an area of higher concentration to an area of lower concentration. Diffusion does not require the cell to use ATP. Osmosis is the diffusion of water across a selectively permeable membrane.\nActive transport is different from diffusion because it requires energy. During active transport, cells can move substances from an area of lower concentration to an area of higher concentration. Protein pumps in the cell membrane can use ATP to move specific substances.\nCells can also move large materials using vesicles. Endocytosis brings materials into a cell by forming a vesicle around them. Exocytosis moves materials out of a cell when a vesicle fuses with the cell membrane.\nEvolution and Natural Selection\nEvolution refers to changes in populations over generations. Individuals within a population can have differences in their traits. Some differences are influenced by genetic variation. Mutations are changes in DNA that can introduce new genetic variation.\nNatural selection occurs when individuals with certain inherited traits have differences in survival or reproduction. Traits that increase reproductive success can become more common in a population over many generations. Natural selection acts on existing variation rather than creating traits because an organism needs them.\nAdaptation is a characteristic that helps an organism survive or reproduce in its environment. Adaptations can involve physical structures, physiological processes, or behaviors. Evolutionary change occurs in populations over generations rather than because an individual intentionally changes its inherited traits.\nHuman Body Systems\nThe human body contains many organ systems that work together. The circulatory system transports oxygen, nutrients, hormones, and waste products through the body. The heart pumps blood through blood vessels. Red blood cells contain hemoglobin, which helps transport oxygen.\nThe respiratory system is responsible for exchanging gases. Air travels into the lungs, where oxygen moves into the blood and carbon dioxide moves from the blood into the lungs. The digestive system breaks food into nutrients that can be absorbed and used by the body.\nThe nervous system receives information, processes signals, and coordinates many body activities. Neurons are specialized cells that transmit electrical and chemical signals. The endocrine system uses hormones to regulate processes such as growth, metabolism, and reproduction.\nThe immune system helps protect the body from pathogens and other harmful substances. Different types of immune cells recognize and respond to foreign materials. The skeletal and muscular systems work together to provide support and allow movement."
+                },
+                {
+                    "topic": "Cellular Respiration",
+                    "fileName": "Text Input",
+                    "text": "Cellular Respiration\r\n\nCellular respiration is the process cells use to extract usable energy from nutrients such as glucose. In aerobic respiration, oxygen is used and carbon dioxide and water are produced.\r\n\nThe main stages of cellular respiration are glycolysis, the citric acid cycle, and oxidative phosphorylation.\r\n\nGlycolysis occurs in the cytoplasm. During glycolysis, one glucose molecule is broken down into two molecules of pyruvate. A small amount of ATP and NADH is produced.\r\n\nThe citric acid cycle occurs in the mitochondrial matrix in eukaryotic cells. It completes the breakdown of carbon compounds and produces ATP, NADH, and FADH2.\r\n\nOxidative phosphorylation occurs at the inner mitochondrial membrane. Electrons from NADH and FADH2 move through an electron transport chain.\r\n\nThe electron transport chain uses the energy released by electrons to pump hydrogen ions across the inner mitochondrial membrane. This creates a concentration gradient.\r\n\nATP synthase uses the movement of hydrogen ions through the membrane to produce ATP. Oxygen serves as the final electron acceptor and combines with hydrogen ions to form water.\r\n\nMost ATP produced during aerobic cellular respiration comes from oxidative phosphorylation.\r\n\nWhen oxygen is unavailable, some cells can use fermentation to continue producing small amounts of ATP through glycolysis."
+                },
+                {
+                    "topic": "Photosynthesis",
+                    "fileName": "Text Input",
+                    "text": "Photosynthesis\r\n\nPhotosynthesis is the process by which plants, algae, and some bacteria convert light energy into chemical energy.\r\n\nIn plants, photosynthesis primarily occurs in chloroplasts. Chloroplasts contain a green pigment called chlorophyll that absorbs light energy.\r\n\nPhotosynthesis uses carbon dioxide and water as reactants. Light energy provides the energy needed to produce glucose and oxygen.\r\n\nThe overall process can be summarized as carbon dioxide plus water, using light energy, produces glucose and oxygen.\r\n\nPhotosynthesis occurs in two major stages: the light-dependent reactions and the Calvin cycle.\r\n\nThe light-dependent reactions occur in the thylakoid membranes of chloroplasts. Light energy is used to produce ATP and NADPH. Water is split during these reactions, releasing oxygen as a byproduct.\r\n\nThe Calvin cycle occurs in the stroma of the chloroplast. It uses ATP and NADPH to help convert carbon dioxide into carbohydrates.\r\n\nGlucose produced through photosynthesis can be used as an energy source or stored for later use.\r\n\nPhotosynthesis is important because it converts solar energy into chemical energy and produces much of the oxygen used by aerobic organisms.\r\n\nThe rate of photosynthesis can be affected by factors such as light intensity, carbon dioxide concentration, temperature, and water availability."
+                },
+                {
+                    "topic": "DNA and Genetics",
+                    "fileName": "Text Input",
+                    "text": "DNA and Genetics\r\n\nDNA, or deoxyribonucleic acid, contains the genetic instructions used by living organisms. DNA is made of smaller units called nucleotides.\r\n\nEach nucleotide contains a sugar, a phosphate group, and a nitrogenous base. The four bases in DNA are adenine, thymine, cytosine, and guanine.\r\n\nAdenine pairs with thymine, while cytosine pairs with guanine. These complementary base pairs help DNA maintain its structure and allow genetic information to be copied accurately.\r\n\nGenes are sections of DNA that contain instructions for producing functional products such as proteins. Different versions of a gene are called alleles.\r\n\nChromosomes are structures made of DNA and proteins. Humans normally have 46 chromosomes arranged into 23 pairs.\r\n\nDuring DNA replication, the DNA molecule separates and each original strand serves as a template for a new strand. This produces two DNA molecules that are nearly identical to the original.\r\n\nTranscription is the process of copying information from DNA into messenger RNA. Translation uses the information in messenger RNA to build a protein.\r\n\nMutations are changes in DNA sequences. Some mutations have little or no effect, while others can change the function of a protein or affect an organism's traits.\r\n\nGenotype refers to the genetic makeup of an organism. Phenotype refers to the observable characteristics produced by the interaction of genes and the environment.\r\n\nGregor Mendel studied inheritance using pea plants. His experiments helped establish basic principles of genetics, including the idea that organisms inherit genetic information from their parents."
+                },
+                {
+                    "topic": "Cells",
+                    "fileName": "Text Input",
+                    "text": "Cell Biology\r\n\nCells are the basic unit of life. All living organisms are made of one or more cells. Cells can be classified as either prokaryotic or eukaryotic.\r\n\nProkaryotic cells, such as bacteria, do not have a nucleus. Their DNA is located in a region called the nucleoid. Prokaryotic cells are generally smaller and simpler than eukaryotic cells.\r\n\nEukaryotic cells have a nucleus that contains their DNA. Animals, plants, fungi, and protists are made of eukaryotic cells.\r\n\nThe cell membrane surrounds the cell and controls what enters and leaves the cell. It is made primarily of a phospholipid bilayer.\r\n\nThe nucleus stores the cell's DNA and controls many activities of the cell. Ribosomes are responsible for making proteins.\r\n\nMitochondria produce ATP through cellular respiration. ATP is the main form of usable energy for cells.\r\n\nThe endoplasmic reticulum helps make and transport proteins and lipids. Rough endoplasmic reticulum has ribosomes attached to its surface, while smooth endoplasmic reticulum does not.\r\n\nThe Golgi apparatus modifies, sorts, and packages proteins and other materials for transport.\r\n\nPlant cells contain structures that animal cells do not have, including a cell wall and chloroplasts. The cell wall provides support, while chloroplasts carry out photosynthesis.\r\n\nVacuoles store water, nutrients, and waste. Plant cells typically have a large central vacuole."
                 }
             ],
-            "weakPoints": [],
+            "weakPoints": [
+                "What is photosynthesis Photosynthesis?",
+                "What do light energy provides the energy needed to produce?",
+                "What does genotype refer to?",
+                "What do some mutations have?",
+                "What is DNA made of?"
+            ],
             "studySessions": [],
-            "flashcardResults": []
+            "flashcardResults": [
+                {
+                    "question": "What does DNA and Genetics DNA, or deoxyribonucleic acid, contain?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What does each nucleotide contain?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What does genotype refer to?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What do humans normally have?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What does phenotype refer to?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What is DNA made of?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What do some mutations have?",
+                    "result": "almost"
+                },
+                {
+                    "question": "What are different versions of a gene called?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What is photosynthesis Photosynthesis?",
+                    "result": "almost"
+                },
+                {
+                    "question": "What is light energy?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What do light energy provides the energy needed to produce?",
+                    "result": "needHelp"
+                },
+                {
+                    "question": "What does the overall process can be summarized as carbon dioxide plus water, using light energy, produce?",
+                    "result": "gotIt"
+                }
+            ],
+            "flashcardSets": [
+                {
+                    "id": "c190336a2ac4",
+                    "title": "Photosynthesis Review",
+                    "choice": "topic",
+                    "topic": "Photosynthesis",
+                    "createdAt": "2026-10-01 09:35:54",
+                    "cards": [
+                        {
+                            "question": "What is photosynthesis Photosynthesis?",
+                            "answer": "Photosynthesis Photosynthesis is the process by which plants, algae, and some bacteria convert light energy into chemical energy.",
+                            "result": "almost"
+                        },
+                        {
+                            "question": "What is light energy?",
+                            "answer": "Light energy is used to produce ATP and NADPH.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What do light energy provides the energy needed to produce?",
+                            "answer": "Light energy provides the energy needed to produce glucose and oxygen.",
+                            "result": "needHelp"
+                        },
+                        {
+                            "question": "What does the overall process can be summarized as carbon dioxide plus water, using light energy, produce?",
+                            "answer": "The overall process can be summarized as carbon dioxide plus water, using light energy, produces glucose and oxygen.",
+                            "result": "gotIt"
+                        }
+                    ]
+                },
+                {
+                    "id": "9f7767c769fc",
+                    "title": "DNA and Genetics Review",
+                    "choice": "topic",
+                    "topic": "DNA and Genetics",
+                    "createdAt": "2026-10-01 09:36:07",
+                    "cards": [
+                        {
+                            "question": "What does DNA and Genetics DNA, or deoxyribonucleic acid, contain?",
+                            "answer": "DNA and Genetics DNA, or deoxyribonucleic acid, contains the genetic instructions used by living organisms.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What does each nucleotide contain?",
+                            "answer": "Each nucleotide contains a sugar, a phosphate group, and a nitrogenous base.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What do humans normally have?",
+                            "answer": "Humans normally have 46 chromosomes arranged into 23 pairs.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What does genotype refer to?",
+                            "answer": "Genotype refers to the genetic makeup of an organism.",
+                            "result": "needHelp"
+                        },
+                        {
+                            "question": "What does phenotype refer to?",
+                            "answer": "Phenotype refers to the observable characteristics produced by the interaction of genes and the environment.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What is DNA made of?",
+                            "answer": "DNA is made of smaller units called nucleotides.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What do some mutations have?",
+                            "answer": "Some mutations have little or no effect, while others can change the function of a protein or affect an organism's traits.",
+                            "result": "almost"
+                        },
+                        {
+                            "question": "What are different versions of a gene called?",
+                            "answer": "Different versions of a gene are called alleles.",
+                            "result": "gotIt"
+                        }
+                    ]
+                },
+                {
+                    "id": "5a524a619273",
+                    "title": "DNA and Genetics Review",
+                    "choice": "topic",
+                    "topic": "DNA and Genetics",
+                    "createdAt": "2026-10-06 09:33:16",
+                    "cards": [
+                        {
+                            "question": "What are different versions of a gene called?",
+                            "answer": "Different versions of a gene are called alleles.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What is DNA made of?",
+                            "answer": "DNA is made of smaller units called nucleotides.",
+                            "result": "almost"
+                        },
+                        {
+                            "question": "What does each nucleotide contain?",
+                            "answer": "Each nucleotide contains a sugar, a phosphate group, and a nitrogenous base.",
+                            "result": null
+                        },
+                        {
+                            "question": "What does phenotype refer to?",
+                            "answer": "Phenotype refers to the observable characteristics produced by the interaction of genes and the environment.",
+                            "result": null
+                        },
+                        {
+                            "question": "What do some mutations have?",
+                            "answer": "Some mutations have little or no effect, while others can change the function of a protein or affect an organism's traits.",
+                            "result": null
+                        },
+                        {
+                            "question": "What does genotype refer to?",
+                            "answer": "Genotype refers to the genetic makeup of an organism.",
+                            "result": null
+                        },
+                        {
+                            "question": "What do humans normally have?",
+                            "answer": "Humans normally have 46 chromosomes arranged into 23 pairs.",
+                            "result": null
+                        },
+                        {
+                            "question": "What does DNA, or deoxyribonucleic acid, contain?",
+                            "answer": "DNA, or deoxyribonucleic acid, contains the genetic instructions used by living organisms.",
+                            "result": null
+                        }
+                    ]
+                },
+                {
+                    "id": "fc011db548dd",
+                    "title": "Photosynthesis Review",
+                    "choice": "topic",
+                    "topic": "Photosynthesis",
+                    "createdAt": "2026-10-06 09:34:03",
+                    "cards": [
+                        {
+                            "question": "What does the overall process can be summarized as carbon dioxide plus water, using light energy, produce?",
+                            "answer": "The overall process can be summarized as carbon dioxide plus water, using light energy, produces glucose and oxygen.",
+                            "result": null
+                        },
+                        {
+                            "question": "What do light energy provides the energy needed to produce?",
+                            "answer": "Light energy provides the energy needed to produce glucose and oxygen.",
+                            "result": null
+                        },
+                        {
+                            "question": "What is photosynthesis occurs in two major stages?",
+                            "answer": "Photosynthesis occurs in two major stages is the light-dependent reactions and the Calvin cycle.",
+                            "result": null
+                        },
+                        {
+                            "question": "What is light energy?",
+                            "answer": "Light energy is used to produce ATP and NADPH.",
+                            "result": null
+                        }
+                    ]
+                },
+                {
+                    "id": "f3dc14b1e6d0",
+                    "title": "Weak Points Review",
+                    "choice": "weak",
+                    "topic": "",
+                    "createdAt": "2026-10-06 10:41:19",
+                    "cards": [
+                        {
+                            "question": "What is DNA made of?",
+                            "answer": "DNA is made of smaller units called nucleotides.",
+                            "result": "gotIt",
+                            "sourceSetId": "5a524a619273",
+                            "sourceCardIndex": 1
+                        },
+                        {
+                            "question": "What does genotype refer to?",
+                            "answer": "Genotype refers to the genetic makeup of an organism.",
+                            "result": "gotIt",
+                            "sourceSetId": "9f7767c769fc",
+                            "sourceCardIndex": 3
+                        },
+                        {
+                            "question": "What do some mutations have?",
+                            "answer": "Some mutations have little or no effect, while others can change the function of a protein or affect an organism's traits.",
+                            "result": null,
+                            "sourceSetId": "9f7767c769fc",
+                            "sourceCardIndex": 6
+                        },
+                        {
+                            "question": "What is photosynthesis Photosynthesis?",
+                            "answer": "Photosynthesis Photosynthesis is the process by which plants, algae, and some bacteria convert light energy into chemical energy.",
+                            "result": null,
+                            "sourceSetId": "c190336a2ac4",
+                            "sourceCardIndex": 0
+                        },
+                        {
+                            "question": "What do light energy provides the energy needed to produce?",
+                            "answer": "Light energy provides the energy needed to produce glucose and oxygen.",
+                            "result": null,
+                            "sourceSetId": "c190336a2ac4",
+                            "sourceCardIndex": 2
+                        }
+                    ]
+                }
+            ],
+            "studyActivity": [],
+            "studyTimeSeconds": 0
+        },
+        "Psychology": {
+            "materials": [
+                {
+                    "topic": "General",
+                    "fileName": "Text Input",
+                    "text": "Psychology is the scientific study of behavior and mental processes. Psychologists study how people think, feel, learn, remember, develop, and interact with others.\r\n\nPsychology includes many different areas of study. Biological psychology examines how the brain, nervous system, hormones, and genetics influence behavior. Cognitive psychology studies mental processes such as attention, memory, problem solving, and decision making.\r\n\nDevelopmental psychology examines how people change physically, cognitively, emotionally, and socially throughout their lives. Social psychology studies how people's thoughts, feelings, and behaviors are influenced by other people.\r\n\nPersonality psychology examines patterns of thoughts, feelings, and behaviors that make individuals different from one another. Clinical psychology focuses on understanding and treating mental, emotional, and behavioral difficulties.\r\n\nPsychologists use scientific methods to study behavior. Common research methods include experiments, surveys, interviews, observations, and correlational studies.\r\n\nAn experiment allows researchers to examine cause-and-effect relationships by manipulating an independent variable and measuring its effect on a dependent variable. A control group may be used as a comparison with an experimental group.\r\n\nA correlation describes a relationship between two variables. A positive correlation means that two variables tend to increase or decrease together. A negative correlation means that as one variable increases, the other tends to decrease. Correlation does not by itself demonstrate that one variable causes another.\r\n\nPsychological research also involves ethical principles. Researchers should protect participants from unnecessary harm, obtain informed consent when appropriate, protect private information, and explain the study's purpose and procedures.\r\n\nPsychology connects to many other fields, including biology, education, medicine, sociology, neuroscience, and law."
+                },
+                {
+                    "topic": "Memory",
+                    "fileName": "Psychology_Memory_Slideshow.pdf",
+                    "text": "Memory\n \u007f Memory is the ability to encode, store, and retrieve information.\n\u007f Psychologists study memory to understand how information is learned, retained, and\nlater accessed.\n\nThe Three Basic Processes\n \u007f Encoding: transforming information into a form that can be stored.\n\u007f Storage: maintaining information over time.\n\u007f Retrieval: bringing stored information back when it is needed.\n\nSensory Memory\n \u007f Sensory memory briefly holds information received through the senses.\n\u007f It allows the brain to retain a very short record of sights, sounds, and other sensory\ninformation.\n\u007f Most sensory information disappears quickly unless attention is directed toward it.\n\nShort-Term and Working Memory\n \u007f Short-term memory holds a limited amount of information for a short period.\n\u007f Working memory allows information to be temporarily held and manipulated while\ncompleting a task.\n\u007f Repeating information can help keep it active.\n\nLong-Term Memory\n \u007f Long-term memory can store information for much longer periods.\n\u007f Explicit memory involves information that can be consciously recalled.\n\u007f Implicit memory influences behavior without requiring conscious recall.\n\nEncoding and Rehearsal\n \u007f Rehearsal involves repeating information to help maintain it in memory.\n\u007f Elaborative rehearsal connects new information to knowledge that is already stored.\n\u007f Making meaningful connections can make information easier to remember.\n\nWhy Do We Forget?\n \u007f Forgetting can happen when information was not encoded successfully.\n\u007f Memories can also become difficult to retrieve.\n\u007f Interference occurs when other information makes it harder to remember something.\n\u007f New information can interfere with older memories, and older information can interfere\nwith newer learning.\n\nRecall vs. Recognition\n \u007f Recall requires retrieving information without the same type of direct prompt.\n\u007f Recognition involves identifying information that has been encountered before.\n\u007f Recognition is often easier because the available information provides additional\ncues.\n\nMemory and Sleep\n \u007f Sleep is associated with memory consolidation.\n\u007f Consolidation is the process through which newly learned information becomes\nmore stable in long-term memory.\n\u007f Sleep can therefore play an important role in learning and remembering.\n\nKey Terms\n \u007f Encoding: converting information into a form that can be stored.\n\u007f Storage: maintaining information over time.\n\u007f Retrieval: accessing stored information.\n\u007f Working memory: temporarily holding and using information.\n\u007f Consolidation: stabilizing newly learned information."
+                }
+            ],
+            "weakPoints": [
+                "What is \u007f Most sensory information disappears quickly unless attention?",
+                "What is \u007f Recognition?",
+                "What does \u007f Recognition involve?",
+                "What is \u007f Retrieval: bringing stored information back when it?"
+            ],
+            "studySessions": [],
+            "flashcardResults": [
+                {
+                    "question": "What is \u007f Psychologists study memory to understand how information?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What is \u007f Most sensory information disappears quickly unless attention?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What is \u007f Memory?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What does \u007f Explicit memory involve?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What is \u007f Recognition?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What does \u007f Recognition involve?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What is \u007f Consolidation?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What is \u007f Retrieval: bringing stored information back when it?",
+                    "result": "almost"
+                },
+                {
+                    "question": "What is \u007f Sleep?",
+                    "result": "gotIt"
+                },
+                {
+                    "question": "What does \u007f Rehearsal involve?",
+                    "result": "gotIt"
+                }
+            ],
+            "flashcardSets": [
+                {
+                    "id": "0bf178920ecc",
+                    "title": "Memory Review",
+                    "choice": "topic",
+                    "topic": "Memory",
+                    "createdAt": "2026-10-05 13:24:37",
+                    "cards": [
+                        {
+                            "question": "What is \u007f Psychologists study memory to understand how information?",
+                            "answer": "\u007f Psychologists study memory to understand how information is learned, retained, and.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What is \u007f Most sensory information disappears quickly unless attention?",
+                            "answer": "\u007f Most sensory information disappears quickly unless attention is directed toward it.",
+                            "result": "almost"
+                        },
+                        {
+                            "question": "What is \u007f Memory?",
+                            "answer": "\u007f Memory is the ability to encode, store, and retrieve information.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What does \u007f Explicit memory involve?",
+                            "answer": "\u007f Explicit memory involves information that can be consciously recalled.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What is \u007f Recognition?",
+                            "answer": "\u007f Recognition is often easier because the available information provides additional.",
+                            "result": "needHelp"
+                        },
+                        {
+                            "question": "What does \u007f Recognition involve?",
+                            "answer": "\u007f Recognition involves identifying information that has been encountered before.",
+                            "result": "almost"
+                        },
+                        {
+                            "question": "What is \u007f Retrieval: bringing stored information back when it?",
+                            "answer": "\u007f Retrieval: bringing stored information back when it is needed.",
+                            "result": "almost"
+                        },
+                        {
+                            "question": "What is \u007f Consolidation?",
+                            "answer": "\u007f Consolidation is the process through which newly learned information becomes.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What is \u007f Sleep?",
+                            "answer": "\u007f Sleep is associated with memory consolidation.",
+                            "result": "gotIt"
+                        },
+                        {
+                            "question": "What does \u007f Rehearsal involve?",
+                            "answer": "\u007f Rehearsal involves repeating information to help maintain it in memory.",
+                            "result": "gotIt"
+                        }
+                    ]
+                },
+                {
+                    "id": "afa56a474c06",
+                    "title": "Weak Points Review",
+                    "choice": "weak",
+                    "topic": "",
+                    "createdAt": "2026-10-05 13:25:13",
+                    "cards": [
+                        {
+                            "question": "What is \u007f Most sensory information disappears quickly unless attention?",
+                            "answer": "\u007f Most sensory information disappears quickly unless attention is directed toward it.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 1
+                        },
+                        {
+                            "question": "What is \u007f Memory?",
+                            "answer": "\u007f Memory is the ability to encode, store, and retrieve information.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 2
+                        },
+                        {
+                            "question": "What is \u007f Recognition?",
+                            "answer": "\u007f Recognition is often easier because the available information provides additional.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 4
+                        },
+                        {
+                            "question": "What does \u007f Recognition involve?",
+                            "answer": "\u007f Recognition involves identifying information that has been encountered before.",
+                            "result": "almost",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 5
+                        },
+                        {
+                            "question": "What is \u007f Retrieval: bringing stored information back when it?",
+                            "answer": "\u007f Retrieval: bringing stored information back when it is needed.",
+                            "result": "needHelp",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 6
+                        },
+                        {
+                            "question": "What is \u007f Sleep?",
+                            "answer": "\u007f Sleep is associated with memory consolidation.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 8
+                        }
+                    ]
+                },
+                {
+                    "id": "1dda2fd9f13c",
+                    "title": "Weak Points Review",
+                    "choice": "weak",
+                    "topic": "",
+                    "createdAt": "2026-10-05 13:25:33",
+                    "cards": [
+                        {
+                            "question": "What is \u007f Most sensory information disappears quickly unless attention?",
+                            "answer": "\u007f Most sensory information disappears quickly unless attention is directed toward it.",
+                            "result": "almost",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 1
+                        },
+                        {
+                            "question": "What is \u007f Memory?",
+                            "answer": "\u007f Memory is the ability to encode, store, and retrieve information.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 2
+                        },
+                        {
+                            "question": "What is \u007f Recognition?",
+                            "answer": "\u007f Recognition is often easier because the available information provides additional.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 4
+                        },
+                        {
+                            "question": "What does \u007f Recognition involve?",
+                            "answer": "\u007f Recognition involves identifying information that has been encountered before.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 5
+                        },
+                        {
+                            "question": "What is \u007f Retrieval: bringing stored information back when it?",
+                            "answer": "\u007f Retrieval: bringing stored information back when it is needed.",
+                            "result": "almost",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 6
+                        }
+                    ]
+                },
+                {
+                    "id": "d39e98acd501",
+                    "title": "Weak Points Review",
+                    "choice": "weak",
+                    "topic": "",
+                    "createdAt": "2026-10-05 13:25:50",
+                    "cards": [
+                        {
+                            "question": "What is \u007f Most sensory information disappears quickly unless attention?",
+                            "answer": "\u007f Most sensory information disappears quickly unless attention is directed toward it.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 1
+                        },
+                        {
+                            "question": "What is \u007f Memory?",
+                            "answer": "\u007f Memory is the ability to encode, store, and retrieve information.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 2
+                        },
+                        {
+                            "question": "What is \u007f Recognition?",
+                            "answer": "\u007f Recognition is often easier because the available information provides additional.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 4
+                        },
+                        {
+                            "question": "What does \u007f Recognition involve?",
+                            "answer": "\u007f Recognition involves identifying information that has been encountered before.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 5
+                        },
+                        {
+                            "question": "What is \u007f Retrieval: bringing stored information back when it?",
+                            "answer": "\u007f Retrieval: bringing stored information back when it is needed.",
+                            "result": "gotIt",
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 6
+                        }
+                    ]
+                },
+                {
+                    "id": "92b1a1ef1776",
+                    "title": "Weak Points Review",
+                    "choice": "weak",
+                    "topic": "",
+                    "createdAt": "2026-10-05 13:26:05",
+                    "cards": [
+                        {
+                            "question": "What is \u007f Most sensory information disappears quickly unless attention?",
+                            "answer": "\u007f Most sensory information disappears quickly unless attention is directed toward it.",
+                            "result": null,
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 1
+                        },
+                        {
+                            "question": "What is \u007f Recognition?",
+                            "answer": "\u007f Recognition is often easier because the available information provides additional.",
+                            "result": null,
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 4
+                        },
+                        {
+                            "question": "What does \u007f Recognition involve?",
+                            "answer": "\u007f Recognition involves identifying information that has been encountered before.",
+                            "result": null,
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 5
+                        },
+                        {
+                            "question": "What is \u007f Retrieval: bringing stored information back when it?",
+                            "answer": "\u007f Retrieval: bringing stored information back when it is needed.",
+                            "result": null,
+                            "sourceSetId": "0bf178920ecc",
+                            "sourceCardIndex": 6
+                        }
+                    ]
+                },
+                {
+                    "id": "34d8e3b2d323",
+                    "title": "All Material Review",
+                    "choice": "all",
+                    "topic": "",
+                    "createdAt": "2026-10-06 09:35:27",
+                    "cards": [
+                        {
+                            "question": "What does \u007f Recognition involves identifying information that have?",
+                            "answer": "\u007f Recognition involves identifying information that has been encountered before.",
+                            "result": null
+                        },
+                        {
+                            "question": "What is \u007f Retrieval: bringing stored information back when it?",
+                            "answer": "\u007f Retrieval: bringing stored information back when it is needed.",
+                            "result": null
+                        },
+                        {
+                            "question": "What is \u007f Consolidation?",
+                            "answer": "\u007f Consolidation is the process through which newly learned information becomes.",
+                            "result": null
+                        },
+                        {
+                            "question": "What is \u007f Sleep?",
+                            "answer": "\u007f Sleep is associated with memory consolidation.",
+                            "result": null
+                        },
+                        {
+                            "question": "What is \u007f Recognition?",
+                            "answer": "\u007f Recognition is often easier because the available information provides additional.",
+                            "result": null
+                        },
+                        {
+                            "question": "What is \u007f Memory?",
+                            "answer": "\u007f Memory is the ability to encode, store, and retrieve information.",
+                            "result": null
+                        },
+                        {
+                            "question": "What is \u007f Most sensory information disappears quickly unless attention?",
+                            "answer": "\u007f Most sensory information disappears quickly unless attention is directed toward it.",
+                            "result": null
+                        },
+                        {
+                            "question": "What is \u007f Psychologists study memory to understand how information?",
+                            "answer": "\u007f Psychologists study memory to understand how information is learned, retained, and.",
+                            "result": null
+                        }
+                    ]
+                }
+            ],
+            "studyActivity": [],
+            "studyTimeSeconds": 0
         }
-    }
+    },
+    "studyActivity": [],
+    "planner": {
+        "notes": "",
+        "tasks": [],
+        "events": [],
+        "weeklyGoalMinutes": 240
+    },
+    "aiFeedback": [
+        {
+            "answerId": "5432e4d9-a80b-4fb2-90bd-b804c5a03e53",
+            "subject": "Biology",
+            "question": "why is the sky blue?",
+            "answer": "The sky appears blue because it reflects light from the sun. When sunlight hits the Earth's atmosphere, it scatters into various colors, including blue. This scattering causes the blue color to appear on the surface of the sky. Additionally, clouds and other objects in the sky scatter light differently than the sky itself, further contributing to the overall appearance of the sky being blue.",
+            "rating": "helpful",
+            "comment": "nothing",
+            "timestamp": "2026-11-18T15:23:53"
+        }
+    ]
 }
