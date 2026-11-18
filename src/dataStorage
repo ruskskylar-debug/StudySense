@@ -1,0 +1,59 @@
+"""Persistence helpers for StudySense study data."""
+import json
+import os
+
+APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_FILE = os.path.join(APP_DIR, "data", "studyData.json")
+
+def loadStudyData():
+
+    if not os.path.exists(DATA_FILE):
+        return {
+            "subjects": {}
+        }
+
+    with open(
+        DATA_FILE,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        data = json.load(file)
+
+    # Make sure every subject has the fields used by the current
+    # flashcard/progress system, including older studyData.json files.
+    for subjectData in data.get("subjects", {}).values():
+        subjectData.setdefault("flashcardSets", [])
+        subjectData.setdefault("flashcardResults", [])
+        subjectData.setdefault("weakPoints", [])
+        subjectData.setdefault("studyActivity", [])
+        subjectData.setdefault("studyTimeSeconds", 0)
+
+    data.setdefault("studyActivity", [])
+    data.setdefault("planner", {"notes": "", "tasks": [], "events": [], "weeklyGoalMinutes": 240})
+    data["planner"].setdefault("notes", "")
+    data["planner"].setdefault("tasks", [])
+    data["planner"].setdefault("events", [])
+    data["planner"].setdefault("weeklyGoalMinutes", 240)
+    return data
+
+
+def saveStudyData(data):
+
+    os.makedirs(
+        os.path.dirname(DATA_FILE),
+        exist_ok=True
+    )
+
+    with open(
+        DATA_FILE,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        json.dump(
+            data,
+            file,
+            indent=4
+        )
+
