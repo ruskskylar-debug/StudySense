@@ -1,0 +1,82 @@
+"""AI answer generation helpers for StudySense."""
+import re
+
+def generateAnswer(question, material, model=None):
+    try:
+        prompt = f"""
+You are the StudySense AI Assistant.
+
+Use the study material provided below to answer the student's question.
+
+Study Material:
+{material}
+
+Student Question:
+{question}
+
+Instructions:
+- Answer only the question that was asked.
+- Keep the answer short and focused.
+- Use 1 to 3 sentences.
+- Do not add unrelated information.
+- Do not make up information that is not supported by the study material.
+
+Answer:
+"""
+
+        if model is None:
+            return "The AI model is unavailable. Please try again later."
+
+        result = model(
+            prompt,
+            max_new_tokens=100,
+            do_sample=False
+        )
+
+        answer = result[0]["generated_text"]
+
+        if "Answer:" in answer:
+            answer = answer.split(
+                "Answer:",
+                1
+            )[1].strip()
+
+        sentences = re.split(
+            r"(?<=[.!?])\s+",
+            answer
+        )
+
+        if (
+            len(sentences) > 1
+            and not re.search(r"[.!?]$", sentences[-1])
+        ):
+            sentences = sentences[:-1]
+
+        answer = " ".join(
+            sentences
+        ).strip()
+
+        # Qwen sometimes gives a useful answer and then adds the fallback
+        # message even when the information was found. Remove that extra
+        # message when an actual answer came before it.
+        fallback = "I cannot find that information in the study material."
+
+        if fallback in answer:
+            answerBeforeFallback = answer.split(
+                fallback,
+                1
+            )[0].strip()
+
+            if answerBeforeFallback:
+                answer = answerBeforeFallback
+            else:
+                answer = fallback
+
+        return answer
+
+    except Exception as error:
+        return (
+            "StudySense could not generate an answer.\n\n"
+            + str(error)
+        )
+
